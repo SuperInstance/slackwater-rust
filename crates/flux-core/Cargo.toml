@@ -4,6 +4,11 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+description = "Foundation crate for the Slackwater game system — flux state management, event routing, and lifecycle orchestration"
+repository.workspace = true
+homepage = "https://github.com/SuperInstance/slackwater-rust"
+keywords = ["game", "flux", "state-management", "event-routing", "slackwater"]
+categories = ["game-development", "game-engines"]
 
 [dependencies]
 serde = { workspace = true }

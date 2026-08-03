@@ -3,6 +3,12 @@ name = "harmony-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+authors.workspace = true
+description = "High-performance flow state detection and harmonic analysis for multi-agent creative systems"
+repository.workspace = true
+homepage = "https://github.com/SuperInstance/slackwater-rust"
+keywords = ["harmony", "flow-state", "analysis", "multi-agent", "slackwater"]
+categories = ["game-development", "concurrency"]
 
 [dependencies]
 serde = { workspace = true }

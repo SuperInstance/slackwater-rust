@@ -4,7 +4,11 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "Eisenstein A2 lattice for build placement — exact integer snapping, 60° rotation"
+description = "High-performance Eisenstein lattice structure for spatial coordination in game worlds"
+repository.workspace = true
+homepage = "https://github.com/SuperInstance/slackwater-rust"
+keywords = ["lattice", "eisenstein", "spatial", "grid", "slackwater"]
+categories = ["game-development", "mathematics"]
 
 [dependencies]
 serde = { workspace = true }
