@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/flux-core",        # Layer 1: exact arithmetic, 8-bit error mask
+    "crates/swmidi",           # Layer 2: Tensor-MIDI binary packing
+    "crates/tempo-core",       # Layer 3: BeatClock, TempoMap (PyO3 bindings)
+    "crates/lattice-core",     # Layer 4: Eisenstein A2 lattice math
+    "crates/tminus-core",      # Layer 5: prediction/calibration math
+    "crates/harmony-core",     # Layer 6: Φ computation, Hurst exponent, flow detection
+    "crates/perception-core",  # Layer 7: multi-track MIDI encoding, convergence detection
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["SuperInstance"]
+repository = "https://github.com/SuperInstance/slackwater-rust"
+
+[workspace.dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rayon = "1.10"
