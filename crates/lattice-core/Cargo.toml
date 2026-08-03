@@ -4,5 +4,16 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+description = "Eisenstein A2 lattice for build placement — exact integer snapping, 60° rotation"
 
 [dependencies]
+serde = { workspace = true }
+
+[dev-dependencies]
+criterion = "0.5"
+approx = "0.5"
+serde_json = { workspace = true }
+
+[[bench]]
+name = "snap_bench"
+harness = false

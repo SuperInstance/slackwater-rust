@@ -143,10 +143,29 @@ impl EisensteinPoint {
         let inv_scale = 1.0 / scale;
         let b_raw = 2.0 * y * inv_scale / SQRT3;
         let a_raw = x * inv_scale + b_raw / 2.0;
-        Self {
-            a: a_raw.round() as i32,
-            b: b_raw.round() as i32,
+
+        // Try the rounded candidate and its neighbors to find the true nearest.
+        let b_floor = b_raw.floor() as i32;
+        let a_floor = a_raw.floor() as i32;
+
+        let mut best = Self { a: a_raw.round() as i32, b: b_raw.round() as i32 };
+        let mut best_dist = {
+            let (bx, by) = best.to_cartesian(scale);
+            (bx - x) * (bx - x) + (by - y) * (by - y)
+        };
+
+        for db in -1..=1 {
+            for da in -1..=1 {
+                let candidate = Self { a: a_floor + da, b: b_floor + db };
+                let (cx, cy) = candidate.to_cartesian(scale);
+                let dist = (cx - x) * (cx - x) + (cy - y) * (cy - y);
+                if dist < best_dist {
+                    best = candidate;
+                    best_dist = dist;
+                }
+            }
         }
+        best
     }
 
     /// Snap at unit scale (scale = 1.0).
@@ -164,7 +183,7 @@ impl EisensteinPoint {
     #[inline]
     #[must_use]
     pub const fn rotate_60(self) -> Self {
-        Self::new(-self.b, self.a - self.b)
+        Self::new(self.a - self.b, self.a)
     }
 
     /// Rotate 120° counterclockwise (apply rotate_60 twice).

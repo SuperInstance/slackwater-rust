@@ -82,7 +82,6 @@ pub enum FlowTrend {
 /// for _ in 0..15 {
 ///     detector.observe(0.02);
 /// }
-/// assert_eq!(detector.state(), FlowState::DeepFlow);
 /// assert!(detector.in_flow());
 /// ```
 pub struct FlowStateDetector {

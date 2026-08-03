@@ -23,7 +23,7 @@ use lattice_core::{
 use EisensteinPoint as EP;
 
 const SCALE: f64 = 4.0;
-const TOLERANCE: f64 = 0.5; // half a lattice cell
+const TOLERANCE: f64 = 0.6; // max distance to nearest lattice point is scale/√3 ≈ 0.577
 
 // ── Creation ───────────────────────────────────────────
 
@@ -91,12 +91,12 @@ fn test_cartesian_known_values() {
     // (0, 1) → x=-2, y=2√3 at scale 4
     let (x, y) = EP::new(0, 1).to_cartesian(SCALE);
     assert_relative_eq!(x, -2.0);
-    assert_relative_eq!(y, 4.0 * std::f64::consts::SQRT_3 / 2.0);
+    assert_relative_eq!(y, 4.0 * 1.7320508075688772f64 / 2.0);
 
     // (1, 1) → x=2, y=2√3 at scale 4
     let (x, y) = EP::new(1, 1).to_cartesian(SCALE);
     assert_relative_eq!(x, 2.0);
-    assert_relative_eq!(y, 4.0 * std::f64::consts::SQRT_3 / 2.0);
+    assert_relative_eq!(y, 4.0 * 1.7320508075688772f64 / 2.0);
 }
 
 // ── Lattice distance ───────────────────────────────────
@@ -220,9 +220,9 @@ fn test_rotate_180_twice_is_identity() {
 
 #[test]
 fn test_rotate_60_specific() {
-    // Multiplication by ω: (a + bω)·ω = -b + (a-b)ω
+    // 60° CCW rotation: (a, b) → (a-b, a)
     let p = EP::new(2, 3);
-    let expected = EP::new(-3, -1); // -b=-3, a-b=2-3=-1
+    let expected = EP::new(-1, 2); // a-b=2-3=-1, a=2
     assert_eq!(p.rotate_60(), expected);
 }
 

@@ -110,18 +110,30 @@ pub fn compute_phi(
         return 1.0;
     }
 
-    // Persistence component: hurst > 0.5 means trending (flow).
-    // Friction from lack of persistence = 1 - max(0, hurst - 0.5) scaled to [0, 1].
-    // If hurst = 0.5: persistence_friction = 1.0 (no trending)
-    // If hurst = 1.0: persistence_friction = 0.0 (strong trending)
-    let hurst = hurst_exponent(action_intervals);
-    let persistence_friction = 1.0 - (hurst - 0.5).max(0.0) / 0.5;
+    // Zero-variance check: perfectly regular intervals = perfect cadence = flow.
+    let mean = action_intervals.iter().sum::<f64>() / action_intervals.len() as f64;
+    let variance = action_intervals.iter()
+        .map(|x| (x - mean).powi(2))
+        .sum::<f64>() / action_intervals.len() as f64;
 
-    // Entropy component: high entropy = high friction.
-    let entropy_friction = normalized_entropy(action_intervals);
+    let (persistence_friction, entropy_friction, cadence_friction);
 
-    // Cadence component: irregular cadence = high friction.
-    let cadence_friction = 1.0 - cadence_regularity(action_intervals);
+    if variance < 1e-12 {
+        // Perfectly metronomic — maximum flow indicators.
+        persistence_friction = 0.0;
+        entropy_friction = 0.0;
+        cadence_friction = 0.0;
+    } else {
+        // Persistence component: hurst > 0.5 means trending (flow).
+        let hurst = hurst_exponent(action_intervals);
+        persistence_friction = 1.0 - (hurst - 0.5).max(0.0) / 0.5;
+
+        // Entropy component: high entropy = high friction.
+        entropy_friction = normalized_entropy(action_intervals);
+
+        // Cadence component: irregular cadence = high friction.
+        cadence_friction = 1.0 - cadence_regularity(action_intervals);
+    }
 
     // Idle penalty: directly proportional to idle ratio.
     let idle_penalty = idle_ratio.clamp(0.0, 1.0);

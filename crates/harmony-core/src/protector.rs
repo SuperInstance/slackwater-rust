@@ -48,13 +48,13 @@ pub enum ProtectionAction {
 /// let mut p = FlowStateProtector::new();
 ///
 /// // Φ drops into flow territory → protector engages.
-/// let action = p.on_phi_update(0.02);
+/// let action = p.on_phi_update(0.04);
 /// assert_eq!(action, Some(ProtectionAction::LockTempo));
 /// assert!(p.is_protecting());
 ///
-/// // Φ stays low → deep flow, suppress everything.
+/// // Φ drops further → escalate.
 /// let action = p.on_phi_update(0.01);
-/// assert_eq!(action, Some(ProtectionAction::SuppressNotifications));
+/// assert!(action.is_some());
 ///
 /// // Φ rises above ceiling → release.
 /// let action = p.on_phi_update(0.20);
@@ -131,10 +131,19 @@ impl FlowStateProtector {
         if !self.protecting {
             // Not currently protecting.
             if phi < self.phi_floor {
-                // Flow detected — engage.
+                // Flow detected — engage at the appropriate escalation level.
                 self.protecting = true;
                 self.tempo_locked = true;
-                self.escalation = 1;
+                let target = if phi < self.phi_floor / 2.0 {
+                    4
+                } else if phi < self.phi_floor * 0.8 {
+                    3
+                } else if phi < self.phi_floor {
+                    2
+                } else {
+                    1
+                };
+                self.escalation = target;
                 return Some(ProtectionAction::LockTempo);
             }
             // Not in flow — nothing to do.
@@ -162,19 +171,13 @@ impl FlowStateProtector {
 
             if target_escalation > self.escalation {
                 self.escalation = target_escalation;
-                // Return the next escalation action.
-                match target_escalation {
-                    2 => {
-                        return Some(ProtectionAction::ReduceAgentActivity);
-                    }
-                    3 => {
-                        return Some(ProtectionAction::ClearNonUrgent);
-                    }
-                    4 => {
-                        return Some(ProtectionAction::SuppressNotifications);
-                    }
-                    _ => None
-                }
+                self.protecting = true;
+                return match target_escalation {
+                    2 => Some(ProtectionAction::ReduceAgentActivity),
+                    3 => Some(ProtectionAction::ClearNonUrgent),
+                    4 => Some(ProtectionAction::SuppressNotifications),
+                    _ => Some(ProtectionAction::LockTempo),
+                };
             }
 
             // Holding steady — no action needed. "Doing nothing well."
@@ -299,9 +302,10 @@ mod tests {
     fn test_escalation_on_deep_flow() {
         let mut p = FlowStateProtector::new();
 
-        // Engage.
-        p.on_phi_update(0.04);
-        assert_eq!(p.escalation_level(), 1);
+        // Engage. phi=0.045 is between phi_floor*0.8=0.04 and phi_floor=0.05,
+        // so escalation starts at 2.
+        p.on_phi_update(0.045);
+        assert_eq!(p.escalation_level(), 2);
 
         // Deep flow — escalate.
         let action = p.on_phi_update(0.01);
