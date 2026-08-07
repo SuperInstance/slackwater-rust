@@ -100,11 +100,7 @@ impl PhiWeights {
 /// let phi = compute_phi(&irregular, 0.5, &PhiWeights::default());
 /// assert!(phi > 0.3, "irregular actions should have high Φ, got {phi}");
 /// ```
-pub fn compute_phi(
-    action_intervals: &[f64],
-    idle_ratio: f64,
-    weights: &PhiWeights,
-) -> f64 {
+pub fn compute_phi(action_intervals: &[f64], idle_ratio: f64, weights: &PhiWeights) -> f64 {
     if action_intervals.is_empty() {
         // No actions = maximum friction (player is stuck or absent).
         return 1.0;
@@ -112,9 +108,11 @@ pub fn compute_phi(
 
     // Zero-variance check: perfectly regular intervals = perfect cadence = flow.
     let mean = action_intervals.iter().sum::<f64>() / action_intervals.len() as f64;
-    let variance = action_intervals.iter()
+    let variance = action_intervals
+        .iter()
         .map(|x| (x - mean).powi(2))
-        .sum::<f64>() / action_intervals.len() as f64;
+        .sum::<f64>()
+        / action_intervals.len() as f64;
 
     let (persistence_friction, entropy_friction, cadence_friction);
 
@@ -170,11 +168,7 @@ pub fn compute_phi(
 /// let phis = compute_phi_windowed(&timestamps, 20, &PhiWeights::default());
 /// assert_eq!(phis.len(), 81);
 /// ```
-pub fn compute_phi_windowed(
-    actions: &[f64],
-    window_size: usize,
-    weights: &PhiWeights,
-) -> Vec<f64> {
+pub fn compute_phi_windowed(actions: &[f64], window_size: usize, weights: &PhiWeights) -> Vec<f64> {
     let n = actions.len();
     if window_size < 2 || n < window_size {
         return Vec::new();
@@ -189,10 +183,7 @@ pub fn compute_phi_windowed(
             let window = &actions[i..i + window_size];
 
             // Compute inter-action intervals for this window.
-            let intervals: Vec<f64> = window
-                .windows(2)
-                .map(|pair| pair[1] - pair[0])
-                .collect();
+            let intervals: Vec<f64> = window.windows(2).map(|pair| pair[1] - pair[0]).collect();
 
             // Estimate idle ratio within the window.
             // Idle = intervals significantly longer than the median.
@@ -233,8 +224,7 @@ mod tests {
     #[test]
     fn test_irregular_actions_high_phi() {
         let irregular: Vec<f64> = vec![
-            0.1, 5.0, 0.2, 8.0, 0.3, 10.0, 0.1, 7.0,
-            0.2, 6.0, 0.1, 9.0, 0.3, 4.0, 0.1, 8.0,
+            0.1, 5.0, 0.2, 8.0, 0.3, 10.0, 0.1, 7.0, 0.2, 6.0, 0.1, 9.0, 0.3, 4.0, 0.1, 8.0,
         ];
         let phi = compute_phi(&irregular, 0.3, &PhiWeights::default());
         assert!(phi > 0.3, "irregular actions should have high Φ, got {phi}");
@@ -260,7 +250,10 @@ mod tests {
         let timestamps: Vec<f64> = (0..200).map(|i| i as f64 * 0.5).collect();
         let phis = compute_phi_windowed(&timestamps, 20, &PhiWeights::default());
         for (i, &phi) in phis.iter().enumerate() {
-            assert!(phi >= 0.0 && phi <= 1.0, "Φ at window {i} out of range: {phi}");
+            assert!(
+                phi >= 0.0 && phi <= 1.0,
+                "Φ at window {i} out of range: {phi}"
+            );
         }
     }
 

@@ -27,6 +27,4 @@ pub mod swmidi;
 
 pub use error_mask::ErrorMask;
 pub use exact::{Channel, Confidence, EisensteinCoord, Pitch, Tick, Velocity};
-pub use swmidi::{
-    DecodeError, EventType, MetaType, SwmidiEvent, SwmidiStream,
-};
+pub use swmidi::{DecodeError, EventType, MetaType, SwmidiEvent, SwmidiStream};

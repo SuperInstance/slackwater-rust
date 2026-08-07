@@ -130,13 +130,19 @@ mod tests {
         // Evenly spaced distinct values → high (but not necessarily 1.0 due to binning).
         let values: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
         let ne = normalized_entropy(&values);
-        assert!(ne > 0.8, "uniform distribution should have high entropy, got {ne}");
+        assert!(
+            ne > 0.8,
+            "uniform distribution should have high entropy, got {ne}"
+        );
     }
 
     #[test]
     fn test_normalized_in_range() {
         let values = vec![0.5, 1.0, 1.5, 2.0, 0.3, 0.7, 1.2, 3.0, 0.1, 2.5];
         let ne = normalized_entropy(&values);
-        assert!(ne >= 0.0 && ne <= 1.0, "normalized entropy should be in [0,1], got {ne}");
+        assert!(
+            ne >= 0.0 && ne <= 1.0,
+            "normalized entropy should be in [0,1], got {ne}"
+        );
     }
 }

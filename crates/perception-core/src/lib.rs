@@ -54,7 +54,10 @@ impl TrackEvent {
     /// Create a new track event from Eisenstein coordinates.
     pub fn from_eisenstein(tick: u32, a: i32, b: i32) -> Self {
         let position_packed = pack_eisenstein(a, b);
-        Self { tick, position_packed }
+        Self {
+            tick,
+            position_packed,
+        }
     }
 
     /// Unpack to Eisenstein (a, b) coordinates.
@@ -242,7 +245,8 @@ impl MultiTrack {
             }
 
             // Group by exact position first
-            let mut exact_groups: std::collections::HashMap<u32, Vec<&str>> = std::collections::HashMap::new();
+            let mut exact_groups: std::collections::HashMap<u32, Vec<&str>> =
+                std::collections::HashMap::new();
             for (agent, pos) in &placements {
                 exact_groups.entry(*pos).or_default().push(agent);
             }

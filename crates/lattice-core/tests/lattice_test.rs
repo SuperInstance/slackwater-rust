@@ -14,13 +14,12 @@
 #![warn(clippy::all)]
 #![deny(unsafe_code)]
 
+use EisensteinPoint as EP;
 use approx::assert_relative_eq;
 use lattice_core::{
-    build_boundary, collides, nearest_unoccupied, occupied_in_radius, snap_height,
-    snap_position, snap_rotation, snap_rotation_index, snap_all, EisensteinPoint, LatticeRegion,
-    SnappedPlacement,
+    EisensteinPoint, LatticeRegion, SnappedPlacement, build_boundary, collides, nearest_unoccupied,
+    occupied_in_radius, snap_all, snap_height, snap_position, snap_rotation, snap_rotation_index,
 };
-use EisensteinPoint as EP;
 
 const SCALE: f64 = 4.0;
 const TOLERANCE: f64 = 0.6; // max distance to nearest lattice point is scale/√3 ≈ 0.577
@@ -157,12 +156,7 @@ fn test_neighbors_are_unique() {
     let neighbors = EP::origin().neighbors();
     let mut seen = std::collections::HashSet::new();
     for n in &neighbors {
-        assert!(
-            seen.insert(*n),
-            "duplicate neighbor ({}, {})",
-            n.a,
-            n.b
-        );
+        assert!(seen.insert(*n), "duplicate neighbor ({}, {})", n.a, n.b);
     }
 }
 
@@ -178,12 +172,7 @@ fn test_neighbors_known_values() {
         EP::new(-1, -1),
     ];
     for e in &expected {
-        assert!(
-            neighbors.contains(e),
-            "missing neighbor ({}, {})",
-            e.a,
-            e.b
-        );
+        assert!(neighbors.contains(e), "missing neighbor ({}, {})", e.a, e.b);
     }
 }
 
@@ -333,12 +322,7 @@ fn test_collides_with_min_distance() {
 
 #[test]
 fn test_occupied_in_radius() {
-    let occupied = vec![
-        EP::origin(),
-        EP::new(1, 0),
-        EP::new(2, 0),
-        EP::new(10, 10),
-    ];
+    let occupied = vec![EP::origin(), EP::new(1, 0), EP::new(2, 0), EP::new(10, 10)];
     let result = occupied_in_radius(&occupied, &EP::origin(), 2);
     assert_eq!(result.len(), 3);
     assert!(result.contains(&EP::origin()));
@@ -380,7 +364,10 @@ fn test_nearest_unoccupied_finds_among_many() {
     occupied_with_center.push(EP::origin());
     let result2 = nearest_unoccupied(&occupied_with_center, &target);
     let d = target.lattice_distance(&result2);
-    assert_eq!(d, 2, "expected distance 2 when origin and all neighbors occupied");
+    assert_eq!(
+        d, 2,
+        "expected distance 2 when origin and all neighbors occupied"
+    );
     assert!(!occupied_with_center.contains(&result2));
 }
 
@@ -597,7 +584,12 @@ fn test_scale_consistency() {
 fn test_snap_rotation_index_range() {
     for deg in -360..=360 {
         let idx = snap_rotation_index(deg as f64);
-        assert!(idx >= 0 && idx <= 5, "rotation index {} out of range for {}", idx, deg);
+        assert!(
+            idx >= 0 && idx <= 5,
+            "rotation index {} out of range for {}",
+            idx,
+            deg
+        );
     }
 }
 

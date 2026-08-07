@@ -33,14 +33,8 @@ const SQRT3_OVER_2: f64 = SQRT3 / 2.0;
 /// **Note:** This uses (1,1) / (-1,-1) — not (1,-1) / (-1,1) — because
 /// ω² = -1 - ω, so (1+ω) is a unit. The neighbor directions are:
 ///   (1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1)
-pub const NEIGHBOR_DIRECTIONS: [(i32, i32); 6] = [
-    (1, 0),
-    (-1, 0),
-    (0, 1),
-    (0, -1),
-    (1, 1),
-    (-1, -1),
-];
+pub const NEIGHBOR_DIRECTIONS: [(i32, i32); 6] =
+    [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1)];
 
 /// An exact point on the Eisenstein A₂ lattice.
 ///
@@ -148,7 +142,10 @@ impl EisensteinPoint {
         let b_floor = b_raw.floor() as i32;
         let a_floor = a_raw.floor() as i32;
 
-        let mut best = Self { a: a_raw.round() as i32, b: b_raw.round() as i32 };
+        let mut best = Self {
+            a: a_raw.round() as i32,
+            b: b_raw.round() as i32,
+        };
         let mut best_dist = {
             let (bx, by) = best.to_cartesian(scale);
             (bx - x) * (bx - x) + (by - y) * (by - y)
@@ -156,7 +153,10 @@ impl EisensteinPoint {
 
         for db in -1..=1 {
             for da in -1..=1 {
-                let candidate = Self { a: a_floor + da, b: b_floor + db };
+                let candidate = Self {
+                    a: a_floor + da,
+                    b: b_floor + db,
+                };
                 let (cx, cy) = candidate.to_cartesian(scale);
                 let dist = (cx - x) * (cx - x) + (cy - y) * (cy - y);
                 if dist < best_dist {
@@ -255,9 +255,7 @@ impl EisensteinPoint {
             }
         }
         result.sort_by(|a, b| {
-            let dist_cmp = a
-                .lattice_distance(&self)
-                .cmp(&b.lattice_distance(&self));
+            let dist_cmp = a.lattice_distance(&self).cmp(&b.lattice_distance(&self));
             if dist_cmp != Ordering::Equal {
                 return dist_cmp;
             }
@@ -396,5 +394,3 @@ fn hex_distance_raw(da: i32, db: i32) -> u32 {
         da.unsigned_abs() + db.unsigned_abs()
     }
 }
-
-

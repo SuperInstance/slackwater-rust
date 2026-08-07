@@ -35,5 +35,5 @@ pub mod protector;
 
 // Re-export the primary types at the crate root for convenience.
 pub use flow_state::{FlowState, FlowStateDetector, FlowTrend};
-pub use phi::{compute_phi, compute_phi_windowed, PhiWeights};
+pub use phi::{PhiWeights, compute_phi, compute_phi_windowed};
 pub use protector::{FlowStateProtector, ProtectionAction};

@@ -51,7 +51,11 @@ pub struct Prediction {
 impl Prediction {
     /// Create a new prediction.
     pub const fn new(target_tick: u32, expected_value: i32, confidence: u8) -> Self {
-        Self { target_tick, expected_value, confidence }
+        Self {
+            target_tick,
+            expected_value,
+            confidence,
+        }
     }
 
     /// Decay confidence based on temporal distance.
@@ -91,7 +95,11 @@ impl Calibration {
     pub fn measure(tick: u32, expected: i32, actual: i32) -> Self {
         let delta = actual - expected;
         let magnitude = delta.unsigned_abs().min(127) as u8;
-        Self { tick, delta, magnitude }
+        Self {
+            tick,
+            delta,
+            magnitude,
+        }
     }
 
     /// Is this calibration within an acceptable threshold?
@@ -156,7 +164,9 @@ impl Default for CalibrationHistory {
 impl CalibrationHistory {
     /// Create an empty history.
     pub fn new() -> Self {
-        Self { readings: Vec::with_capacity(MAX_WINDOW) }
+        Self {
+            readings: Vec::with_capacity(MAX_WINDOW),
+        }
     }
 
     /// Push a new reading. Automatically trims to MAX_WINDOW.
@@ -202,12 +212,16 @@ impl CalibrationHistory {
             return 0;
         }
         let mid = self.readings.len() / 2;
-        let first_half_avg: f64 =
-            self.readings[..mid].iter().map(|r| r.delta as f64).sum::<f64>()
-                / mid as f64;
-        let second_half_avg: f64 =
-            self.readings[mid..].iter().map(|r| r.delta as f64).sum::<f64>()
-                / (self.readings.len() - mid) as f64;
+        let first_half_avg: f64 = self.readings[..mid]
+            .iter()
+            .map(|r| r.delta as f64)
+            .sum::<f64>()
+            / mid as f64;
+        let second_half_avg: f64 = self.readings[mid..]
+            .iter()
+            .map(|r| r.delta as f64)
+            .sum::<f64>()
+            / (self.readings.len() - mid) as f64;
         (second_half_avg - first_half_avg) as i32
     }
 
@@ -217,12 +231,16 @@ impl CalibrationHistory {
             return false;
         }
         let mid = self.readings.len() / 2;
-        let first_avg: f64 =
-            self.readings[..mid].iter().map(|r| r.magnitude as f64).sum::<f64>()
-                / mid as f64;
-        let second_avg: f64 =
-            self.readings[mid..].iter().map(|r| r.magnitude as f64).sum::<f64>()
-                / (self.readings.len() - mid) as f64;
+        let first_avg: f64 = self.readings[..mid]
+            .iter()
+            .map(|r| r.magnitude as f64)
+            .sum::<f64>()
+            / mid as f64;
+        let second_avg: f64 = self.readings[mid..]
+            .iter()
+            .map(|r| r.magnitude as f64)
+            .sum::<f64>()
+            / (self.readings.len() - mid) as f64;
         second_avg < first_avg
     }
 
@@ -291,10 +309,10 @@ impl TMinusEngine {
             // Update smoothed value (exponential smoothing)
             let delta_ticks = (tick - self.last_tick).max(1) as f64;
             let observed_rate = (actual_value as f64 - self.smoothed_value) / delta_ticks;
-            self.smoothed_value = self.alpha * actual_value as f64
-                + (1.0 - self.alpha) * self.smoothed_value;
-            self.smoothed_rate = self.alpha * observed_rate
-                + (1.0 - self.alpha) * self.smoothed_rate;
+            self.smoothed_value =
+                self.alpha * actual_value as f64 + (1.0 - self.alpha) * self.smoothed_value;
+            self.smoothed_rate =
+                self.alpha * observed_rate + (1.0 - self.alpha) * self.smoothed_rate;
 
             calibration
         };

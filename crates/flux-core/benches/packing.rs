@@ -3,7 +3,7 @@
 //! Measures the core thesis: 8-byte binary events vs JSON envelopes.
 //! Run with: `cargo bench --bench packing`
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use flux_core::{ErrorMask, EventType, SwmidiEvent, SwmidiStream};
 
 fn make_stream(n: usize) -> SwmidiStream {
@@ -29,19 +29,13 @@ fn make_stream(n: usize) -> SwmidiStream {
 fn make_stream_with_cc(n: usize) -> SwmidiStream {
     let mut stream = SwmidiStream::with_capacity(n);
     for i in 0..n {
-        let event = SwmidiEvent::new(
-            EventType::NoteOn,
-            (i % 16) as u8,
-            60,
-            96,
-            (i as u32) * 96,
-        )
-        .with_cc(vec![
-            (16, 64 + (i % 64) as u8),
-            (17, 32 + (i % 64) as u8),
-            (20, (i % 128) as u8),
-            (21, (i % 16) as u8),
-        ]);
+        let event = SwmidiEvent::new(EventType::NoteOn, (i % 16) as u8, 60, 96, (i as u32) * 96)
+            .with_cc(vec![
+                (16, 64 + (i % 64) as u8),
+                (17, 32 + (i % 64) as u8),
+                (20, (i % 128) as u8),
+                (21, (i % 16) as u8),
+            ]);
         stream.push(event);
     }
     stream
@@ -63,14 +57,22 @@ fn bench_packing(c: &mut Criterion) {
 
         // Also benchmark unpacking
         let packed = stream.pack_binary();
-        group.bench_with_input(BenchmarkId::new("binary_unpack", size), &packed, |b, data| {
-            b.iter(|| black_box(SwmidiStream::unpack_binary(data).unwrap()));
-        });
+        group.bench_with_input(
+            BenchmarkId::new("binary_unpack", size),
+            &packed,
+            |b, data| {
+                b.iter(|| black_box(SwmidiStream::unpack_binary(data).unwrap()));
+            },
+        );
 
         let json = stream.to_json();
-        group.bench_with_input(BenchmarkId::new("json_deserialize", size), &json, |b, data| {
-            b.iter(|| black_box(SwmidiStream::from_json(data).unwrap()));
-        });
+        group.bench_with_input(
+            BenchmarkId::new("json_deserialize", size),
+            &json,
+            |b, data| {
+                b.iter(|| black_box(SwmidiStream::from_json(data).unwrap()));
+            },
+        );
     }
 
     group.finish();
@@ -94,14 +96,7 @@ fn bench_packing(c: &mut Criterion) {
 }
 
 fn bench_single_event(c: &mut Criterion) {
-    let event = SwmidiEvent::new(
-        EventType::NoteOn,
-        3,
-        60,
-        96,
-        43200,
-    )
-    .with_mask(ErrorMask::SPATIAL);
+    let event = SwmidiEvent::new(EventType::NoteOn, 3, 60, 96, 43200).with_mask(ErrorMask::SPATIAL);
 
     c.bench_function("single_event_pack", |b| {
         b.iter(|| black_box(event.pack()));

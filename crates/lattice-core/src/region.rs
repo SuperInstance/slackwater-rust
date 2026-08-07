@@ -81,9 +81,7 @@ impl LatticeRegion {
     pub fn iter(&self) -> impl Iterator<Item = EisensteinPoint> + '_ {
         let (min_a, max_a) = (self.min.a, self.max.a);
         let (min_b, max_b) = (self.min.b, self.max.b);
-        (min_b..=max_b).flat_map(move |b| {
-            (min_a..=max_a).map(move |a| EisensteinPoint::new(a, b))
-        })
+        (min_b..=max_b).flat_map(move |b| (min_a..=max_a).map(move |a| EisensteinPoint::new(a, b)))
     }
 
     /// Expand the region by `by` units in all directions.
@@ -114,14 +112,8 @@ impl LatticeRegion {
             return None;
         }
         Some(Self::new(
-            EisensteinPoint::new(
-                max(self.min.a, other.min.a),
-                max(self.min.b, other.min.b),
-            ),
-            EisensteinPoint::new(
-                min(self.max.a, other.max.a),
-                min(self.max.b, other.max.b),
-            ),
+            EisensteinPoint::new(max(self.min.a, other.min.a), max(self.min.b, other.min.b)),
+            EisensteinPoint::new(min(self.max.a, other.max.a), min(self.max.b, other.max.b)),
         ))
     }
 
@@ -129,14 +121,8 @@ impl LatticeRegion {
     #[must_use]
     pub fn union(&self, other: &Self) -> Self {
         Self::new(
-            EisensteinPoint::new(
-                min(self.min.a, other.min.a),
-                min(self.min.b, other.min.b),
-            ),
-            EisensteinPoint::new(
-                max(self.max.a, other.max.a),
-                max(self.max.b, other.max.b),
-            ),
+            EisensteinPoint::new(min(self.min.a, other.min.a), min(self.min.b, other.min.b)),
+            EisensteinPoint::new(max(self.max.a, other.max.a), max(self.max.b, other.max.b)),
         )
     }
 }

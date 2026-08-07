@@ -15,4 +15,6 @@ pub mod snap;
 pub use eisenstein::EisensteinPoint;
 pub use neighbors::{build_boundary, collides, nearest_unoccupied, occupied_in_radius};
 pub use region::LatticeRegion;
-pub use snap::{snap_all, snap_height, snap_position, snap_rotation, snap_rotation_index, SnappedPlacement};
+pub use snap::{
+    SnappedPlacement, snap_all, snap_height, snap_position, snap_rotation, snap_rotation_index,
+};

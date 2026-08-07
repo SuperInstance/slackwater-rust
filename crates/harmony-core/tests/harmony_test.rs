@@ -11,7 +11,7 @@ use harmony_core::{
     entropy::{action_entropy, normalized_entropy},
     flow_state::{FlowState, FlowStateDetector, FlowTrend},
     hurst::hurst_exponent,
-    phi::{compute_phi, compute_phi_windowed, PhiWeights},
+    phi::{PhiWeights, compute_phi, compute_phi_windowed},
     protector::{FlowStateProtector, ProtectionAction},
 };
 
@@ -154,14 +154,10 @@ fn phi_regular_fast_actions_produce_low_phi() {
 #[test]
 fn phi_irregular_actions_produce_high_phi() {
     let irregular: Vec<f64> = vec![
-        0.1, 5.0, 0.2, 8.0, 0.3, 10.0, 0.1, 7.0,
-        0.2, 6.0, 0.1, 9.0, 0.3, 4.0, 0.1, 8.0,
+        0.1, 5.0, 0.2, 8.0, 0.3, 10.0, 0.1, 7.0, 0.2, 6.0, 0.1, 9.0, 0.3, 4.0, 0.1, 8.0,
     ];
     let phi = compute_phi(&irregular, 0.3, &PhiWeights::default());
-    assert!(
-        phi > 0.3,
-        "irregular actions should have high Φ, got {phi}"
-    );
+    assert!(phi > 0.3, "irregular actions should have high Φ, got {phi}");
 }
 
 #[test]
@@ -175,14 +171,13 @@ fn phi_in_range() {
     let test_intervals: &[&[f64]] = &[
         &[0.5; 100],
         &[0.1, 5.0, 0.2, 8.0],
-        &(0..50).map(|i| (i as f64).sin().abs() + 0.5).collect::<Vec<_>>(),
+        &(0..50)
+            .map(|i| (i as f64).sin().abs() + 0.5)
+            .collect::<Vec<_>>(),
     ];
     for intervals in test_intervals {
         let phi = compute_phi(intervals, 0.2, &PhiWeights::default());
-        assert!(
-            (0.0..=1.0).contains(&phi),
-            "Φ out of [0,1]: {phi}"
-        );
+        assert!((0.0..=1.0).contains(&phi), "Φ out of [0,1]: {phi}");
     }
 }
 

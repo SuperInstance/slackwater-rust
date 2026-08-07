@@ -12,7 +12,10 @@ use std::collections::HashSet;
 /// is free, returns it immediately. Returns `target` as a fallback if nothing
 /// is found within the default search radius of 20.
 #[must_use]
-pub fn nearest_unoccupied(occupied: &[EisensteinPoint], target: &EisensteinPoint) -> EisensteinPoint {
+pub fn nearest_unoccupied(
+    occupied: &[EisensteinPoint],
+    target: &EisensteinPoint,
+) -> EisensteinPoint {
     let occupied_set: HashSet<&EisensteinPoint> = occupied.iter().collect();
 
     if !occupied_set.contains(target) {
@@ -51,7 +54,11 @@ pub fn occupied_in_radius(
 /// Returns `true` if any occupied point is within `min_distance`
 /// (hex steps) of `new_placement`.
 #[must_use]
-pub fn collides(new_placement: &EisensteinPoint, occupied: &[EisensteinPoint], min_distance: u32) -> bool {
+pub fn collides(
+    new_placement: &EisensteinPoint,
+    occupied: &[EisensteinPoint],
+    min_distance: u32,
+) -> bool {
     occupied
         .iter()
         .any(|p| p.lattice_distance(new_placement) <= min_distance)
@@ -69,11 +76,7 @@ pub fn build_boundary(occupied: &[EisensteinPoint]) -> Vec<EisensteinPoint> {
     occupied
         .iter()
         .copied()
-        .filter(|p| {
-            p.neighbors()
-                .iter()
-                .any(|n| !occupied_set.contains(n))
-        })
+        .filter(|p| p.neighbors().iter().any(|n| !occupied_set.contains(n)))
         .collect()
 }
 
@@ -101,11 +104,7 @@ mod tests {
 
     #[test]
     fn occupied_in_radius_basic() {
-        let occupied = vec![
-            EP::origin(),
-            EP::new(1, 0),
-            EP::new(5, 5),
-        ];
+        let occupied = vec![EP::origin(), EP::new(1, 0), EP::new(5, 5)];
         let result = occupied_in_radius(&occupied, &EP::origin(), 1);
         assert!(result.contains(&EP::origin()));
         assert!(result.contains(&EP::new(1, 0)));

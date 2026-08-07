@@ -251,7 +251,10 @@ impl FlowStateDetector {
         let recent_avg: f64 =
             self.phi_history[recent_start..].iter().sum::<f64>() / recent_len as f64;
         let prev_avg: f64 = if prev_len > 0 {
-            self.phi_history[prev_start..recent_start].iter().sum::<f64>() / prev_len as f64
+            self.phi_history[prev_start..recent_start]
+                .iter()
+                .sum::<f64>()
+                / prev_len as f64
         } else {
             recent_avg
         };
@@ -323,9 +326,7 @@ mod tests {
             d.observe(0.08);
         }
         // Should be approaching or out of flow (0.08 < 0.05*2 = 0.10).
-        assert!(
-            d.state() == FlowState::ApproachingFlow || d.state() == FlowState::OutOfFlow
-        );
+        assert!(d.state() == FlowState::ApproachingFlow || d.state() == FlowState::OutOfFlow);
 
         // Phase 2: Enter flow — low Φ sustained.
         for _ in 0..6 {

@@ -85,7 +85,14 @@ impl SwmidiEvent {
         error_mask: u8,
         tick: u32,
     ) -> Self {
-        Self { event_type, channel: channel & 0x0F, pitch: pitch & 0x7F, velocity: velocity & 0x7F, error_mask, tick }
+        Self {
+            event_type,
+            channel: channel & 0x0F,
+            pitch: pitch & 0x7F,
+            velocity: velocity & 0x7F,
+            error_mask,
+            tick,
+        }
     }
 
     /// Encode this event into 8 bytes.
@@ -109,7 +116,14 @@ impl SwmidiEvent {
         let velocity = buf[2] & 0x7F;
         let error_mask = buf[3];
         let tick = u32::from_le_bytes([buf[4], buf[5], buf[6], buf[7]]);
-        Some(Self { event_type, channel, pitch, velocity, error_mask, tick })
+        Some(Self {
+            event_type,
+            channel,
+            pitch,
+            velocity,
+            error_mask,
+            tick,
+        })
     }
 
     /// Whether this event has zero error mask (flow state).
@@ -202,7 +216,7 @@ impl SwmidiStream {
     /// Returns an error if the buffer length is not a multiple of 8,
     /// or if any event has an invalid type nibble.
     pub fn decode_all(buf: &[u8]) -> Result<Self, DecodeError> {
-        if buf.len() % PACKED_SIZE != 0 {
+        if !buf.len().is_multiple_of(PACKED_SIZE) {
             return if buf.is_empty() {
                 Ok(Self::new())
             } else {
@@ -221,7 +235,9 @@ impl SwmidiStream {
 
     /// Filter events to those within a tick range [start, end).
     pub fn in_tick_range(&self, start: u32, end: u32) -> impl Iterator<Item = &SwmidiEvent> {
-        self.events.iter().filter(move |e| e.tick >= start && e.tick < end)
+        self.events
+            .iter()
+            .filter(move |e| e.tick >= start && e.tick < end)
     }
 
     /// Count events with friction (error_mask != 0).
@@ -354,9 +370,23 @@ mod tests {
     fn stream_flow_friction_counts() {
         let mut stream = SwmidiStream::new();
         stream.push(SwmidiEvent::new(EventType::NoteOn, 0, 60, 100, 0, 0));
-        stream.push(SwmidiEvent::new(EventType::NoteOn, 0, 64, 100, 0b0000_0001, 96));
+        stream.push(SwmidiEvent::new(
+            EventType::NoteOn,
+            0,
+            64,
+            100,
+            0b0000_0001,
+            96,
+        ));
         stream.push(SwmidiEvent::new(EventType::NoteOn, 0, 67, 100, 0, 192));
-        stream.push(SwmidiEvent::new(EventType::NoteOn, 0, 72, 100, 0b0000_0010, 288));
+        stream.push(SwmidiEvent::new(
+            EventType::NoteOn,
+            0,
+            72,
+            100,
+            0b0000_0010,
+            288,
+        ));
 
         assert_eq!(stream.flow_count(), 2);
         assert_eq!(stream.friction_count(), 2);

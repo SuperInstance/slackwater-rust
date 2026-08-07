@@ -12,9 +12,9 @@
 use flux_core::error_mask::ErrorMask;
 use flux_core::exact::EisensteinCoord;
 use lattice_core::snap::snap_position;
+use swmidi::{EventType, SwmidiEvent, SwmidiStream};
 use tempo_core::{BeatClock, MusicalPosition, PPQ};
 use tminus_core::TMinusEngine;
-use swmidi::{EventType, SwmidiEvent, SwmidiStream};
 
 #[test]
 fn full_pipeline_build_to_swmidi() {
@@ -28,16 +28,16 @@ fn full_pipeline_build_to_swmidi() {
     let coord = EisensteinCoord::new(3, 4);
 
     // 2. Snap to lattice
-    let snapped = snap_position(coord.a as f64, coord.b as f64);
+    let _snapped = snap_position(coord.a as f64, coord.b as f64);
 
     // 3. Encode as SWMIDI NoteOn event (flow state — no friction)
     let event = SwmidiEvent::new(
         EventType::NoteOn,
-        0,                                    // channel 0
-        (coord.a as u8) & 0x7F,               // pitch = action code
-        100,                                  // velocity = weight
-        ErrorMask::FLOW.bits(),               // no friction
-        0,                                    // tick 0
+        0,                      // channel 0
+        (coord.a as u8) & 0x7F, // pitch = action code
+        100,                    // velocity = weight
+        ErrorMask::FLOW.bits(), // no friction
+        0,                      // tick 0
     );
 
     // 4. Round-trip through encode/decode
@@ -79,7 +79,11 @@ fn tempo_change_affects_calibration() {
 
     // Now observe tick 100 with a much lower value (tempo slowed)
     let cal = engine.observe(100, 500);
-    assert!(cal.magnitude > 20, "Expected significant calibration drift, got magnitude={}", cal.magnitude);
+    assert!(
+        cal.magnitude > 20,
+        "Expected significant calibration drift, got magnitude={}",
+        cal.magnitude
+    );
 }
 
 #[test]
@@ -88,14 +92,7 @@ fn error_mask_flows_through_swmidi() {
     // The error mask should survive SWMIDI encode/decode.
 
     let friction_mask = ErrorMask::SPATIAL.with(ErrorMask::TEMPORAL);
-    let event = SwmidiEvent::new(
-        EventType::NoteOn,
-        2,
-        60,
-        80,
-        friction_mask.bits(),
-        192,
-    );
+    let event = SwmidiEvent::new(EventType::NoteOn, 2, 60, 80, friction_mask.bits(), 192);
 
     let encoded = event.encode();
     let decoded = SwmidiEvent::decode(&encoded).unwrap();
@@ -138,7 +135,10 @@ fn musical_position_tracks_beat_clock() {
     assert_eq!(pos.beat, 3);
 
     // Round trip
-    assert_eq!(MusicalPosition::from_tick(1056, beats_per_bar).to_tick(beats_per_bar), 1056);
+    assert_eq!(
+        MusicalPosition::from_tick(1056, beats_per_bar).to_tick(beats_per_bar),
+        1056
+    );
 }
 
 #[test]
@@ -226,6 +226,9 @@ fn full_fleet_convergence_scenario() {
 
     // Tick 0: all three at (5,5) = exact convergence
     // Tick 96: alpha and gamma at (6,6), beta at (10,10) = divergence
-    assert!(report.exact_count >= 1, "Should have at least one exact convergence");
+    assert!(
+        report.exact_count >= 1,
+        "Should have at least one exact convergence"
+    );
     assert_eq!(report.agent_count, 3);
 }

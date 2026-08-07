@@ -4,6 +4,8 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+description = "Multi-track MIDI encoding and convergence detection for fleet-level perception"
+repository.workspace = true
 
 [dependencies]
 serde = { workspace = true }

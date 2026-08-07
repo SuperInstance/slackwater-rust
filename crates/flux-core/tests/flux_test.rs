@@ -9,10 +9,8 @@
 
 #![warn(clippy::all)]
 
-use flux_core::{
-    ErrorMask, EventType, SwmidiEvent, SwmidiStream,
-};
 use flux_core::EisensteinCoord;
+use flux_core::{ErrorMask, EventType, SwmidiEvent, SwmidiStream};
 
 // ═══════════════════════════════════════════════════════════════════════
 //  EisensteinCoord tests
@@ -80,8 +78,8 @@ fn coord_snap_arbitrary_floats() {
     // Snap some arbitrary float coordinates and verify they land on lattice points
     let test_cases: &[(f64, f64, i32, i32)] = &[
         (0.0, 0.0, 0, 0),
-        (4.0, 0.0, 1, 0),   // x=4, z=0 → (1, 0)
-        (0.0, 6.928_203_230_275_509, 1, 2),  // b=2, a=0/4+2/2=1
+        (4.0, 0.0, 1, 0),                   // x=4, z=0 → (1, 0)
+        (0.0, 6.928_203_230_275_509, 1, 2), // b=2, a=0/4+2/2=1
         (8.0, 0.0, 2, 0),
         (-2.0, 3.464_101_615_137_755, 0, 1), // b=1, a=-2/4+0.5=0
     ];
@@ -104,7 +102,10 @@ fn coord_distance() {
     let neighbor = EisensteinCoord::new(1, 0);
     // Distance between adjacent lattice points = lattice scale = 4.0
     let d = origin.distance_to(&neighbor);
-    assert!((d - 4.0).abs() < 1e-9, "neighbor distance should be 4.0, got {d}");
+    assert!(
+        (d - 4.0).abs() < 1e-9,
+        "neighbor distance should be 4.0, got {d}"
+    );
 }
 
 #[test]
@@ -278,8 +279,7 @@ fn event_pack_unpack_roundtrip_lossless() {
         let packed = event.pack();
         assert_eq!(packed.len(), 8, "packed must be exactly 8 bytes");
 
-        let unpacked = SwmidiEvent::unpack(&packed)
-            .expect("unpack should succeed");
+        let unpacked = SwmidiEvent::unpack(&packed).expect("unpack should succeed");
 
         assert_eq!(unpacked.event_type, event.event_type, "event_type mismatch");
         assert_eq!(unpacked.channel, event.channel, "channel mismatch");
@@ -411,14 +411,13 @@ fn stream_binary_pack_unpack_roundtrip() {
 fn stream_binary_pack_unpack_with_cc() {
     let mut stream = SwmidiStream::new();
     for i in 0..30 {
-        let event = SwmidiEvent::note_on(0, 60, 96, i * 96)
-            .with_cc(vec![
-                (16, (i % 128) as u8),
-                (17, (i % 128) as u8),
-                (20, 10),
-                (21, 5),
-                (22, (i % 8) as u8),
-            ]);
+        let event = SwmidiEvent::note_on(0, 60, 96, i * 96).with_cc(vec![
+            (16, (i % 128) as u8),
+            (17, (i % 128) as u8),
+            (20, 10),
+            (21, 5),
+            (22, (i % 8) as u8),
+        ]);
         stream.push(event);
     }
     // Add some events without CC
@@ -638,7 +637,7 @@ fn channel_bitfield_isolation() {
     // Verify that we can distinguish events by channel.
 
     let voice_event = SwmidiEvent::note_on(13, 60, 96, 0); // Hermes trying to build
-    let build_event = SwmidiEvent::note_on(0, 60, 96, 0);  // Lucineer building
+    let build_event = SwmidiEvent::note_on(0, 60, 96, 0); // Lucineer building
 
     assert_ne!(voice_event.channel, build_event.channel);
 
@@ -682,6 +681,9 @@ fn grand_plan_channel_map_coverage() {
         let event = SwmidiEvent::note_on(ch, 60, 96, 0);
         let packed = event.pack();
         let unpacked = SwmidiEvent::unpack(&packed).unwrap();
-        assert_eq!(unpacked.channel, ch, "channel {ch} should survive pack/unpack");
+        assert_eq!(
+            unpacked.channel, ch,
+            "channel {ch} should survive pack/unpack"
+        );
     }
 }

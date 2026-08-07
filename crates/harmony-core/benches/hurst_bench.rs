@@ -3,7 +3,7 @@
 //! Measures performance on datasets of increasing size to demonstrate
 //! the O(n log n) scaling characteristics of the R/S method.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use harmony_core::hurst::hurst_exponent;
 
 fn generate_trending_data(n: usize) -> Vec<f64> {
@@ -44,5 +44,10 @@ fn bench_hurst_100000(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_hurst_1000, bench_hurst_10000, bench_hurst_100000);
+criterion_group!(
+    benches,
+    bench_hurst_1000,
+    bench_hurst_10000,
+    bench_hurst_100000
+);
 criterion_main!(benches);

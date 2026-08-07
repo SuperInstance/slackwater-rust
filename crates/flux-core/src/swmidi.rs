@@ -360,12 +360,9 @@ impl SwmidiStream {
         // CC block
         let mut pos = events_end;
         if data.len() >= pos + 4 {
-            let cc_count = u32::from_le_bytes([
-                data[pos],
-                data[pos + 1],
-                data[pos + 2],
-                data[pos + 3],
-            ]) as usize;
+            let cc_count =
+                u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]])
+                    as usize;
             pos += 4;
 
             for _ in 0..cc_count {
@@ -439,15 +436,9 @@ mod tests {
 
     #[test]
     fn pack_unpack_roundtrip() {
-        let event = SwmidiEvent::new(
-            EventType::NoteOn,
-            3,
-            60,
-            96,
-            43200,
-        )
-        .with_mask(ErrorMask::SPATIAL | ErrorMask::SAFETY)
-        .with_cc(vec![(16, 64), (17, 32)]);
+        let event = SwmidiEvent::new(EventType::NoteOn, 3, 60, 96, 43200)
+            .with_mask(ErrorMask::SPATIAL | ErrorMask::SAFETY)
+            .with_cc(vec![(16, 64), (17, 32)]);
 
         let packed = event.pack();
         let unpacked = SwmidiEvent::unpack(&packed).unwrap();
@@ -529,10 +520,7 @@ mod tests {
     fn stream_json_roundtrip() {
         let mut stream = SwmidiStream::new();
         stream.push(SwmidiEvent::note_on(0, 60, 96, 43200));
-        stream.push(
-            SwmidiEvent::note_on(9, 36, 120, 43296)
-                .with_mask(ErrorMask::TEMPORAL),
-        );
+        stream.push(SwmidiEvent::note_on(9, 36, 120, 43296).with_mask(ErrorMask::TEMPORAL));
 
         let json = stream.to_json();
         let unpacked = SwmidiStream::from_json(&json).unwrap();

@@ -48,7 +48,10 @@ pub struct TempoEvent {
 impl TempoEvent {
     /// Create a new tempo event at the given tick.
     pub const fn new(tick: u32, us_per_quarter: u64) -> Self {
-        Self { tick, us_per_quarter }
+        Self {
+            tick,
+            us_per_quarter,
+        }
     }
 
     /// Convert microseconds-per-quarter to BPM.
@@ -172,8 +175,7 @@ impl TempoMap {
 
             if remaining_us <= segment_us {
                 // Target is within this segment
-                let ticks_here =
-                    (remaining_us * PPQ as u64 / current_us_per_quarter.max(1)) as u32;
+                let ticks_here = (remaining_us * PPQ as u64 / current_us_per_quarter.max(1)) as u32;
                 return last_tick + ticks_here;
             }
 
@@ -183,8 +185,7 @@ impl TempoMap {
         }
 
         // Target is in the final segment (extends to infinity)
-        let ticks_here =
-            (remaining_us * PPQ as u64 / current_us_per_quarter.max(1)) as u32;
+        let ticks_here = (remaining_us * PPQ as u64 / current_us_per_quarter.max(1)) as u32;
         last_tick + ticks_here
     }
 
@@ -333,7 +334,11 @@ impl MusicalPosition {
         let within_bar = tick % ticks_per_bar;
         let beat = within_bar / PPQ;
         let sub_tick = within_bar % PPQ;
-        Self { bar, beat, sub_tick }
+        Self {
+            bar,
+            beat,
+            sub_tick,
+        }
     }
 
     /// Convert back to a tick value.
