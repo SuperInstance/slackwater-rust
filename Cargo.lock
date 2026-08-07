@@ -324,6 +324,9 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 [[package]]
 name = "perception-core"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "pin-project-lite"
@@ -493,6 +496,9 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 [[package]]
 name = "swmidi"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "syn"
@@ -519,6 +525,9 @@ dependencies = [
 [[package]]
 name = "tempo-core"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "tinytemplate"
@@ -533,6 +542,9 @@ dependencies = [
 [[package]]
 name = "tminus-core"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "unicode-ident"
