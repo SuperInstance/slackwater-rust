@@ -8,6 +8,7 @@ members = [
     "crates/tminus-core",      # Layer 5: prediction/calibration math
     "crates/harmony-core",     # Layer 6: Φ computation, Hurst exponent, flow detection
     "crates/perception-core",  # Layer 7: multi-track MIDI encoding, convergence detection
+    "crates/tensor-midi-core", # Tensor-MIDI: 12-pulse conversation-as-jazz engine
     "crates/integration-tests", # Cross-layer integration tests
 ]
 
