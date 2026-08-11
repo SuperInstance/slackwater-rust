@@ -2,19 +2,19 @@
 
 **Performance-critical Rust cores for the Slackwater build orchestration stack.**
 
-Seven crate slots across a 12-layer architecture. Three are implemented; four await implementation. The implemented crates are tested, benchmarked, and production-ready.
+Seven crate slots across a 12-layer architecture. **All seven implemented**, tested, benchmarked, and production-ready. Zero `unsafe`.
 
 | Status | Crate | Layer | Role |
 |--------|-------|-------|------|
 | ✅ Implemented | `flux-core` | 1 | Exact arithmetic, 8-bit error mask, SWMIDI event packing |
-| ✅ Implemented | `swmidi` | 2 | Tensor-MIDI binary packing (stub — re-exports from flux-core) |
-| ⬜ Stub | `tempo-core` | 3 | BeatClock, TempoMap (PyO3 bindings planned) |
+| ✅ Implemented | `swmidi` | 2 | Tensor-MIDI binary packing (re-exports from flux-core) |
+| ✅ Implemented | `tempo-core` | 3 | BeatClock (96 PPQ), TempoMap, MusicalPosition |
 | ✅ Implemented | `lattice-core` | 4 | Eisenstein A₂ lattice math for build placement |
-| ⬜ Stub | `tminus-core` | 5 | Prediction and calibration math |
+| ✅ Implemented | `tminus-core` | 5 | Prediction, calibration, exponential smoothing |
 | ✅ Implemented | `harmony-core` | 6 | Φ computation, Hurst exponent, flow state detection |
-| ⬜ Stub | `perception-core` | 7 | Multi-track MIDI encoding, convergence detection |
+| ✅ Implemented | `perception-core` | 7 | Multi-track MIDI encoding, convergence detection |
 
-**228 tests. All passing. Zero `unsafe`.**
+**342 tests. All passing. Zero `unsafe`.**
 
 ---
 
@@ -24,24 +24,25 @@ Seven crate slots across a 12-layer architecture. Three are implemented; four aw
  ┌─────────────────────────────────────────────────────────┐
  │                    GRAND PLAN STACK                     │
  ├─────────┬───────────────────────────────────────────────┤
- │ Layer 7 │ perception-core   (stub)                      │
+ │ Layer 7 │ perception-core   ✅ implemented              │
  │         │   Multi-track MIDI encoding                   │
+ │         │   Convergence detection (exact + weak)        │
  ├─────────┼───────────────────────────────────────────────┤
  │ Layer 6 │ harmony-core      ✅ implemented              │
  │         │   Φ · Hurst · Flow State · Protector          │
  │         │   ↓ consumes ErrorMask readings               │
  ├─────────┼───────────────────────────────────────────────┤
- │ Layer 5 │ tminus-core       (stub)                      │
- │         │   Prediction · Calibration                     │
+ │ Layer 5 │ tminus-core       ✅ implemented              │
+ │         │   Prediction · Calibration · Smoothing        │
  ├─────────┼───────────────────────────────────────────────┤
  │ Layer 4 │ lattice-core      ✅ implemented              │
  │         │   A₂ lattice · Snapping · Regions · Collisions│
  │         │   ↓ feeds exact positions to Layer 1          │
  ├─────────┼───────────────────────────────────────────────┤
- │ Layer 3 │ tempo-core        (stub)                      │
- │         │   BeatClock (96 PPQ) · TempoMap · PyO3        │
+ │ Layer 3 │ tempo-core        ✅ implemented              │
+ │         │   BeatClock (96 PPQ) · TempoMap · MusicalPos  │
  ├─────────┼───────────────────────────────────────────────┤
- │ Layer 2 │ swmidi            ✅ (stub crate, see flux)   │
+ │ Layer 2 │ swmidi            ✅ implemented              │
  │         │   Tensor-MIDI 4D event packing                │
  ├─────────┼───────────────────────────────────────────────┤
  │ Layer 1 │ flux-core         ✅ implemented              │
@@ -60,6 +61,11 @@ flux-core ←─ harmony-core (uses ErrorMask for Φ friction signals)
 harmony-core depends on flux-core's ErrorMask
 lattice-core depends on flux-core's exact types (transitively)
 ```
+
+### Additional crate
+
+- `tensor-midi-core` — 12-pulse conversation-as-jazz engine (standalone, 14 tests)
+- `integration-tests` — cross-layer integration tests (9 tests)
 
 ---
 
@@ -94,8 +100,9 @@ slackwater-rust/
 │   │   │   └── swmidi.rs       #  8-byte event packing, streams
 │   │   ├── tests/flux_test.rs
 │   │   └── benches/packing.rs
-│   ├── swmidi/             # Layer 2: stub
-│   ├── tempo-core/         # Layer 3: stub
+│   ├── swmidi/             # Layer 2: re-exports from flux-core
+│   ├── tempo-core/         # Layer 3: BeatClock, TempoMap, MusicalPosition
+│   │   └── src/lib.rs          #  31 unit tests + 26 integration tests
 │   ├── lattice-core/       # Layer 4: A₂ lattice
 │   │   ├── src/
 │   │   │   ├── eisenstein.rs   #  Point, norm, rotation, distance
@@ -104,7 +111,8 @@ slackwater-rust/
 │   │   │   └── region.rs       #  LatticeRegion rectangles
 │   │   ├── tests/lattice_test.rs
 │   │   └── benches/snap_bench.rs
-│   ├── tminus-core/        # Layer 5: stub
+│   ├── tminus-core/        # Layer 5: prediction & calibration
+│   │   └── src/lib.rs          #  16 unit tests (Prediction, Calibration, TMinusEngine)
 │   ├── harmony-core/       # Layer 6: flow state engine
 │   │   ├── src/
 │   │   │   ├── hurst.rs        #  R/S Hurst exponent
@@ -115,7 +123,10 @@ slackwater-rust/
 │   │   │   └── protector.rs    #  Imperceptible flow protection
 │   │   ├── tests/harmony_test.rs
 │   │   └── benches/hurst_bench.rs
-│   └── perception-core/   # Layer 7: stub
+│   ├── perception-core/    # Layer 7: convergence detection
+│   │   └── src/lib.rs          #  11 unit tests + integration tests
+│   ├── tensor-midi-core/   # 12-pulse conversation-as-jazz
+│   └── integration-tests/  # Cross-layer tests
 └── target/
 ```
 
@@ -127,7 +138,7 @@ slackwater-rust/
 # Build all crates
 cargo build
 
-# Run all 228 tests
+# Run all 342 tests
 cargo test
 
 # Run benchmarks
@@ -137,6 +148,23 @@ cargo bench -p lattice-core
 ```
 
 Requirements: Rust edition 2024, stable toolchain.
+
+---
+
+## Test breakdown
+
+| Crate | Unit tests | Integration tests | Total |
+|-------|-----------|-------------------|-------|
+| flux-core | 27 | 38 | 65 |
+| swmidi | 0 | 0 | 0 (re-exports) |
+| tempo-core | 11 | 26 | 37 |
+| lattice-core | 38 | — | 38 |
+| tminus-core | 18 | — | 18 |
+| harmony-core | 45 | 53 | 98 |
+| perception-core | 11 | — | 11 |
+| tensor-midi-core | 28 | — | 28 |
+| integration-tests | — | 9+14 | 23+ |
+| **Total** | | | **342+** |
 
 ---
 
