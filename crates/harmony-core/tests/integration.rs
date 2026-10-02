@@ -198,7 +198,11 @@ fn phi_windowed_tracks_transition() {
     let last_regular = timestamps.last().copied().unwrap_or(0.0);
     let mut t = last_regular;
     for _ in 0..50 {
-        t += if timestamps.len().is_multiple_of(3) { 5.0 } else { 0.3 };
+        t += if timestamps.len().is_multiple_of(3) {
+            5.0
+        } else {
+            0.3
+        };
         timestamps.push(t);
     }
 

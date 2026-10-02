@@ -6,9 +6,8 @@
 
 use tensor_midi_core::{
     Capture, ChordQuality, EventRingBuffer, EventType, GridEvent, JazzAnalysis, JazzMode, Message,
-    PULSES_PER_BAR, PulseGrid, SentimentLabel, SwmidiEvent, TICKS_PER_BAR,
-    TICKS_PER_PULSE, analyze_sentiment, channels, detect_tempo, friction, pulse_to_tick,
-    tick_to_pulse,
+    PULSES_PER_BAR, PulseGrid, SentimentLabel, SwmidiEvent, TICKS_PER_BAR, TICKS_PER_PULSE,
+    analyze_sentiment, channels, detect_tempo, friction, pulse_to_tick, tick_to_pulse,
 };
 
 // ════════════════════════════════════════════════════════════════════
