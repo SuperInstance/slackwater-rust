@@ -6,7 +6,7 @@ use lattice_core::{EisensteinPoint, snap_all, snap_position};
 fn bench_snap_position(c: &mut Criterion) {
     // Pre-generate 10,000 random-ish coordinates.
     // We use a simple LCG to avoid pulling in a rand dependency.
-    let coords: Vec<(f64, f64)> = (0..10_000)
+    let coords: Vec<(f64, f64)> = (0u64..10_000)
         .map(|i| {
             let state = i.wrapping_mul(1103515245).wrapping_add(12345);
             let x = ((state >> 16) as f64) * 0.001;

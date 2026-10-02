@@ -585,7 +585,7 @@ fn test_snap_rotation_index_range() {
     for deg in -360..=360 {
         let idx = snap_rotation_index(deg as f64);
         assert!(
-            idx >= 0 && idx <= 5,
+            (0..=5).contains(&idx),
             "rotation index {} out of range for {}",
             idx,
             deg

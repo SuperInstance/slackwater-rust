@@ -225,9 +225,8 @@ impl SwmidiStream {
         }
 
         let mut stream = Self::new();
-        for chunk in buf.chunks_exact(PACKED_SIZE) {
-            let arr: [u8; PACKED_SIZE] = chunk.try_into().unwrap();
-            let event = SwmidiEvent::decode(&arr).ok_or(DecodeError::InvalidEventType)?;
+        for chunk in buf.as_chunks::<PACKED_SIZE>().0 {
+            let event = SwmidiEvent::decode(chunk).ok_or(DecodeError::InvalidEventType)?;
             stream.push(event);
         }
         Ok(stream)

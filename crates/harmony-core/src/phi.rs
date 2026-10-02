@@ -251,7 +251,7 @@ mod tests {
         let phis = compute_phi_windowed(&timestamps, 20, &PhiWeights::default());
         for (i, &phi) in phis.iter().enumerate() {
             assert!(
-                phi >= 0.0 && phi <= 1.0,
+                (0.0..=1.0).contains(&phi),
                 "Φ at window {i} out of range: {phi}"
             );
         }

@@ -3,14 +3,13 @@
 //! Tests the interaction between flow state detection, Φ computation,
 //! cadence, entropy, and the protector across realistic scenarios.
 
-use harmony_core::{
-    FlowState, FlowStateDetector, FlowTrend,
-    PhiWeights, compute_phi, compute_phi_windowed,
-    FlowStateProtector, ProtectionAction,
-};
 use harmony_core::cadence::{cadence_regularity, cadence_stability};
 use harmony_core::entropy::{action_entropy, normalized_entropy};
 use harmony_core::hurst::hurst_exponent;
+use harmony_core::{
+    FlowState, FlowStateDetector, FlowStateProtector, FlowTrend, PhiWeights, ProtectionAction,
+    compute_phi, compute_phi_windowed,
+};
 
 // ════════════════════════════════════════════════════════════════════
 // CADENCE INTEGRATION
@@ -20,7 +19,9 @@ use harmony_core::hurst::hurst_exponent;
 fn cadence_regularity_decreases_with_noise() {
     let perfect: Vec<f64> = vec![1.0; 50];
     let slightly_off: Vec<f64> = (0..50).map(|i| 1.0 + (i as f64 * 0.01)).collect();
-    let very_irregular: Vec<f64> = (0..50).map(|i| if i % 2 == 0 { 0.5 } else { 3.0 }).collect();
+    let very_irregular: Vec<f64> = (0..50)
+        .map(|i| if i % 2 == 0 { 0.5 } else { 3.0 })
+        .collect();
 
     let r1 = cadence_regularity(&perfect);
     let r2 = cadence_regularity(&slightly_off);
@@ -40,7 +41,12 @@ fn cadence_stability_shows_transition() {
 
     let early_avg: f64 = stability[..5].iter().sum::<f64>() / 5.0;
     let late_avg: f64 = stability[stability.len() - 5..].iter().sum::<f64>() / 5.0;
-    assert!(early_avg > late_avg, "early cadence should be more stable: {} vs {}", early_avg, late_avg);
+    assert!(
+        early_avg > late_avg,
+        "early cadence should be more stable: {} vs {}",
+        early_avg,
+        late_avg
+    );
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -50,15 +56,27 @@ fn cadence_stability_shows_transition() {
 #[test]
 fn entropy_increases_with_diversity() {
     let constant = vec![1.0; 100];
-    let two_values: Vec<f64> = (0..100).map(|i| if i % 2 == 0 { 1.0 } else { 2.0 }).collect();
+    let two_values: Vec<f64> = (0..100)
+        .map(|i| if i % 2 == 0 { 1.0 } else { 2.0 })
+        .collect();
     let many_values: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
 
     let e1 = action_entropy(&constant);
     let e2 = action_entropy(&two_values);
     let e3 = action_entropy(&many_values);
 
-    assert!(e1 < e2, "constant should have less entropy than two-value: {} vs {}", e1, e2);
-    assert!(e2 < e3, "two-value should have less entropy than many: {} vs {}", e2, e3);
+    assert!(
+        e1 < e2,
+        "constant should have less entropy than two-value: {} vs {}",
+        e1,
+        e2
+    );
+    assert!(
+        e2 < e3,
+        "two-value should have less entropy than many: {} vs {}",
+        e2,
+        e3
+    );
 }
 
 #[test]
@@ -72,7 +90,11 @@ fn normalized_entropy_always_in_unit_range() {
 
     for intervals in test_cases {
         let ne = normalized_entropy(&intervals);
-        assert!(ne >= 0.0 && ne <= 1.0, "normalized entropy out of range for test case: {}", ne);
+        assert!(
+            (0.0..=1.0).contains(&ne),
+            "normalized entropy out of range for test case: {}",
+            ne
+        );
     }
 }
 
@@ -110,12 +132,23 @@ fn phi_always_in_unit_range() {
         (vec![1.0; 100], 0.0),
         (vec![0.1, 5.0, 0.2, 8.0], 0.5),
         ((0..50).map(|i| i as f64 * 0.1).collect::<Vec<_>>(), 0.3),
-        ((0..200).map(|i| if i % 3 == 0 { 10.0 } else { 0.5 }).collect::<Vec<_>>(), 0.8),
+        (
+            (0..200)
+                .map(|i| if i % 3 == 0 { 10.0 } else { 0.5 })
+                .collect::<Vec<_>>(),
+            0.8,
+        ),
     ];
 
     for (intervals, idle) in test_cases {
         let phi = compute_phi(&intervals, idle, &PhiWeights::default());
-        assert!(phi >= 0.0 && phi <= 1.0, "Φ out of range [{}, {}]: {}", idle, intervals.len(), phi);
+        assert!(
+            (0.0..=1.0).contains(&phi),
+            "Φ out of range [{}, {}]: {}",
+            idle,
+            intervals.len(),
+            phi
+        );
     }
 }
 
@@ -124,12 +157,19 @@ fn phi_increases_with_idle_for_regular_intervals() {
     let intervals: Vec<f64> = vec![0.5; 100];
     let phi_0 = compute_phi(&intervals, 0.0, &PhiWeights::default());
     let phi_1 = compute_phi(&intervals, 1.0, &PhiWeights::default());
-    assert!(phi_1 > phi_0, "Full idle should have higher Φ than no idle: {} vs {}", phi_1, phi_0);
+    assert!(
+        phi_1 > phi_0,
+        "Full idle should have higher Φ than no idle: {} vs {}",
+        phi_1,
+        phi_0
+    );
 }
 
 #[test]
 fn phi_custom_weights_change_result() {
-    let intervals: Vec<f64> = (0..50).map(|i| if i % 2 == 0 { 0.5 } else { 2.0 }).collect();
+    let intervals: Vec<f64> = (0..50)
+        .map(|i| if i % 2 == 0 { 0.5 } else { 2.0 })
+        .collect();
 
     let all_persistence = PhiWeights {
         persistence: 1.0,
@@ -146,7 +186,10 @@ fn phi_custom_weights_change_result() {
 
     let phi_p = compute_phi(&intervals, 0.0, &all_persistence);
     let phi_i = compute_phi(&intervals, 0.5, &all_idle);
-    assert!(phi_p != phi_i, "Different weights should produce different Φ");
+    assert!(
+        phi_p != phi_i,
+        "Different weights should produce different Φ"
+    );
 }
 
 #[test]
@@ -155,7 +198,11 @@ fn phi_windowed_tracks_transition() {
     let last_regular = timestamps.last().copied().unwrap_or(0.0);
     let mut t = last_regular;
     for _ in 0..50 {
-        t += if timestamps.len() % 3 == 0 { 5.0 } else { 0.3 };
+        t += if timestamps.len().is_multiple_of(3) {
+            5.0
+        } else {
+            0.3
+        };
         timestamps.push(t);
     }
 
@@ -164,7 +211,12 @@ fn phi_windowed_tracks_transition() {
 
     let early_avg: f64 = phis[..10].iter().sum::<f64>() / 10.0;
     let late_avg: f64 = phis[phis.len() - 10..].iter().sum::<f64>() / 10.0;
-    assert!(early_avg < late_avg, "Φ should increase after transition: {} vs {}", early_avg, late_avg);
+    assert!(
+        early_avg < late_avg,
+        "Φ should increase after transition: {} vs {}",
+        early_avg,
+        late_avg
+    );
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -215,7 +267,10 @@ fn flow_detector_observes_low_phi_to_enter_flow() {
     }
     let state = detector.state();
     assert!(
-        matches!(state, FlowState::InFlow | FlowState::DeepFlow | FlowState::ApproachingFlow),
+        matches!(
+            state,
+            FlowState::InFlow | FlowState::DeepFlow | FlowState::ApproachingFlow
+        ),
         "Expected flow-related state after sustained low Φ, got {:?}",
         state
     );
@@ -296,8 +351,10 @@ fn protector_engages_on_low_phi() {
             action = Some(a);
         }
     }
-    assert!(protector.is_protecting() || action.is_some(),
-        "Protector should engage after sustained low Φ");
+    assert!(
+        protector.is_protecting() || action.is_some(),
+        "Protector should engage after sustained low Φ"
+    );
 }
 
 #[test]
@@ -311,7 +368,10 @@ fn protector_releases_on_high_phi() {
     for _ in 0..200 {
         protector.on_phi_update(0.95);
     }
-    assert!(!protector.is_protecting(), "Protector should release after sustained high Φ");
+    assert!(
+        !protector.is_protecting(),
+        "Protector should release after sustained high Φ"
+    );
 }
 
 #[test]
@@ -341,11 +401,23 @@ fn protector_suppression_list() {
     let mut protector = FlowStateProtector::new();
     protector.suppress("notifications");
     protector.suppress("agent_chatter");
-    assert!(protector.suppression_list().contains(&"notifications".to_string()));
-    assert!(protector.suppression_list().contains(&"agent_chatter".to_string()));
+    assert!(
+        protector
+            .suppression_list()
+            .contains(&"notifications".to_string())
+    );
+    assert!(
+        protector
+            .suppression_list()
+            .contains(&"agent_chatter".to_string())
+    );
 
     protector.unsuppress("notifications");
-    assert!(!protector.suppression_list().contains(&"notifications".to_string()));
+    assert!(
+        !protector
+            .suppression_list()
+            .contains(&"notifications".to_string())
+    );
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -363,7 +435,10 @@ fn phi_and_flow_state_agree_on_flow() {
         detector.observe(phi);
     }
     assert!(
-        matches!(detector.state(), FlowState::InFlow | FlowState::DeepFlow | FlowState::ApproachingFlow),
+        matches!(
+            detector.state(),
+            FlowState::InFlow | FlowState::DeepFlow | FlowState::ApproachingFlow
+        ),
         "Low Φ should lead to flow, got {:?}",
         detector.state()
     );
@@ -372,9 +447,8 @@ fn phi_and_flow_state_agree_on_flow() {
 #[test]
 fn phi_and_flow_state_agree_on_struggle() {
     let intervals: Vec<f64> = vec![
-        0.1, 5.0, 0.2, 8.0, 0.3, 10.0, 0.1, 7.0,
-        0.2, 6.0, 0.1, 9.0, 0.3, 4.0, 0.1, 8.0,
-        0.2, 12.0, 0.1, 6.0, 0.3, 11.0, 0.1, 7.5,
+        0.1, 5.0, 0.2, 8.0, 0.3, 10.0, 0.1, 7.0, 0.2, 6.0, 0.1, 9.0, 0.3, 4.0, 0.1, 8.0, 0.2, 12.0,
+        0.1, 6.0, 0.3, 11.0, 0.1, 7.5,
     ];
     let phi = compute_phi(&intervals, 0.4, &PhiWeights::default());
     assert!(phi > 0.3, "Irregular actions should have higher Φ: {}", phi);

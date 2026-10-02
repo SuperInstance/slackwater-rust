@@ -5,12 +5,9 @@
 //! inline unit tests don't cover.
 
 use tensor_midi_core::{
-    analyze_sentiment, detect_tempo,
-    channels, friction,
-    Capture, ChordQuality, EventRingBuffer, GridEvent, JazzAnalysis, JazzMode,
-    Message, PulseGrid, PulsePosition, SentimentLabel,
-    SwmidiEvent, EventType, TICKS_PER_BAR, TICKS_PER_PULSE, PULSES_PER_BAR,
-    tick_to_pulse, pulse_to_tick,
+    Capture, ChordQuality, EventRingBuffer, EventType, GridEvent, JazzAnalysis, JazzMode, Message,
+    PULSES_PER_BAR, PulseGrid, SentimentLabel, SwmidiEvent, TICKS_PER_BAR, TICKS_PER_PULSE,
+    analyze_sentiment, channels, detect_tempo, friction, pulse_to_tick, tick_to_pulse,
 };
 
 // ════════════════════════════════════════════════════════════════════
@@ -23,12 +20,36 @@ fn full_pipeline_multi_participant_conversation() {
 
     // A realistic conversation: human asks, assistant answers, subagent helps
     let messages = vec![
-        Message { text: "How do we build a jazz engine?".into(), sender: "human".into(), timestamp_ms: 0 },
-        Message { text: "Great question! Let's design and build it together".into(), sender: "assistant".into(), timestamp_ms: 800 },
-        Message { text: "I'll craft the MIDI mapping module".into(), sender: "subagent1".into(), timestamp_ms: 1600 },
-        Message { text: "Perfect, that's amazing work everyone".into(), sender: "human".into(), timestamp_ms: 3000 },
-        Message { text: "The build failed with an error in the audio module".into(), sender: "tool".into(), timestamp_ms: 4000 },
-        Message { text: "Let me explore and fix the issue".into(), sender: "assistant".into(), timestamp_ms: 5000 },
+        Message {
+            text: "How do we build a jazz engine?".into(),
+            sender: "human".into(),
+            timestamp_ms: 0,
+        },
+        Message {
+            text: "Great question! Let's design and build it together".into(),
+            sender: "assistant".into(),
+            timestamp_ms: 800,
+        },
+        Message {
+            text: "I'll craft the MIDI mapping module".into(),
+            sender: "subagent1".into(),
+            timestamp_ms: 1600,
+        },
+        Message {
+            text: "Perfect, that's amazing work everyone".into(),
+            sender: "human".into(),
+            timestamp_ms: 3000,
+        },
+        Message {
+            text: "The build failed with an error in the audio module".into(),
+            sender: "tool".into(),
+            timestamp_ms: 4000,
+        },
+        Message {
+            text: "Let me explore and fix the issue".into(),
+            sender: "assistant".into(),
+            timestamp_ms: 5000,
+        },
     ];
 
     for msg in messages {
@@ -71,18 +92,29 @@ fn pipeline_capture_clear_reset() {
 #[test]
 fn pipeline_encode_decode_round_trip() {
     let mut cap = Capture::new();
-    cap.capture(Message { text: "Hello world".into(), sender: "human".into(), timestamp_ms: 0 });
-    cap.capture(Message { text: "Building something great".into(), sender: "assistant".into(), timestamp_ms: 500 });
-    cap.capture(Message { text: "Error: failed".into(), sender: "tool".into(), timestamp_ms: 1000 });
+    cap.capture(Message {
+        text: "Hello world".into(),
+        sender: "human".into(),
+        timestamp_ms: 0,
+    });
+    cap.capture(Message {
+        text: "Building something great".into(),
+        sender: "assistant".into(),
+        timestamp_ms: 500,
+    });
+    cap.capture(Message {
+        text: "Error: failed".into(),
+        sender: "tool".into(),
+        timestamp_ms: 1000,
+    });
 
     let binary = cap.encode_binary();
     // Each event is PACKED_SIZE bytes
     assert_eq!(binary.len(), 3 * tensor_midi_core::PACKED_SIZE);
 
     // Decode each event
-    for chunk in binary.chunks_exact(tensor_midi_core::PACKED_SIZE) {
-        let arr: [u8; 8] = chunk.try_into().unwrap();
-        let event = SwmidiEvent::decode(&arr).unwrap();
+    for chunk in binary.as_chunks::<{ tensor_midi_core::PACKED_SIZE }>().0 {
+        let event = SwmidiEvent::decode(chunk).unwrap();
         assert!(event.pitch <= 127);
     }
 }
@@ -90,8 +122,16 @@ fn pipeline_encode_decode_round_trip() {
 #[test]
 fn pipeline_export_data_has_consistency() {
     let mut cap = Capture::new();
-    cap.capture(Message { text: "Great".into(), sender: "human".into(), timestamp_ms: 0 });
-    cap.capture(Message { text: "Error".into(), sender: "tool".into(), timestamp_ms: 1000 });
+    cap.capture(Message {
+        text: "Great".into(),
+        sender: "human".into(),
+        timestamp_ms: 0,
+    });
+    cap.capture(Message {
+        text: "Error".into(),
+        sender: "tool".into(),
+        timestamp_ms: 1000,
+    });
 
     let export = cap.export_data();
     assert_eq!(export.events.len(), 2);
@@ -201,7 +241,7 @@ fn sentiment_pitch_bounds_never_exceeded() {
 
     // Extreme positivity + creativity
     let s = analyze_sentiment(
-        "great awesome love perfect excellent wonderful amazing brilliant fantastic beautiful create build design imagine dream invent explore craft forge"
+        "great awesome love perfect excellent wonderful amazing brilliant fantastic beautiful create build design imagine dream invent explore craft forge",
     );
     assert!(s.pitch <= 127);
 }
@@ -222,7 +262,14 @@ fn sentiment_label_predicates() {
 fn pulse_grid_all_twelve_pulses_filled() {
     let mut grid = PulseGrid::new();
     for i in 0..12 {
-        grid.add(SwmidiEvent::new(EventType::NoteOn, 0, 60, 100, 0, i as u32 * TICKS_PER_PULSE));
+        grid.add(SwmidiEvent::new(
+            EventType::NoteOn,
+            0,
+            60,
+            100,
+            0,
+            i as u32 * TICKS_PER_PULSE,
+        ));
     }
     let pattern = grid.bar_pattern(0);
     assert!(pattern.iter().all(|&p| p));
@@ -241,11 +288,25 @@ fn pulse_grid_events_across_multiple_bars() {
     let mut grid = PulseGrid::new();
     // Bar 0: pulses 0, 3, 6, 9 (four-on-the-floor-ish)
     for &p in &[0, 3, 6, 9] {
-        grid.add(SwmidiEvent::new(EventType::NoteOn, 0, 60, 100, 0, p * TICKS_PER_PULSE));
+        grid.add(SwmidiEvent::new(
+            EventType::NoteOn,
+            0,
+            60,
+            100,
+            0,
+            p * TICKS_PER_PULSE,
+        ));
     }
     // Bar 1: pulses 0, 6 (half-time)
     for &p in &[0, 6] {
-        grid.add(SwmidiEvent::new(EventType::NoteOn, 0, 60, 100, 0, TICKS_PER_BAR + p * TICKS_PER_PULSE));
+        grid.add(SwmidiEvent::new(
+            EventType::NoteOn,
+            0,
+            60,
+            100,
+            0,
+            TICKS_PER_BAR + p * TICKS_PER_PULSE,
+        ));
     }
     // Bar 2: empty
 
@@ -272,7 +333,14 @@ fn pulse_grid_sort_by_tick() {
 fn pulse_grid_iter_returns_all_events() {
     let mut grid = PulseGrid::new();
     for i in 0..10 {
-        grid.add(SwmidiEvent::new(EventType::NoteOn, 0, 60 + i, 100, 0, (i as u32) * 48));
+        grid.add(SwmidiEvent::new(
+            EventType::NoteOn,
+            0,
+            60 + i,
+            100,
+            0,
+            (i as u32) * 48,
+        ));
     }
     let collected: Vec<&GridEvent> = grid.iter().collect();
     assert_eq!(collected.len(), 10);
@@ -302,7 +370,12 @@ fn pulse_to_tick_round_trip_many_values() {
     // Test round-trip for many tick values across bars
     for tick in [0, 1, 47, 48, 100, 288, 575, 576, 577, 1000, 1152, 5000] {
         let pos = tick_to_pulse(tick);
-        assert_eq!(pulse_to_tick(pos), tick, "round-trip failed for tick {}", tick);
+        assert_eq!(
+            pulse_to_tick(pos),
+            tick,
+            "round-trip failed for tick {}",
+            tick
+        );
     }
 }
 
@@ -331,7 +404,14 @@ fn ring_buffer_wrap_around_preserves_order() {
     let mut rb = EventRingBuffer::new(4);
     // Fill completely
     for i in 0..4 {
-        rb.push(SwmidiEvent::new(EventType::NoteOn, 0, 60 + i, 100, 0, i as u32));
+        rb.push(SwmidiEvent::new(
+            EventType::NoteOn,
+            0,
+            60 + i,
+            100,
+            0,
+            i as u32,
+        ));
     }
     assert!(rb.is_full());
 
@@ -394,7 +474,10 @@ fn jazz_analysis_solo_mode() {
     let analysis = JazzAnalysis::from_capture(&cap);
     assert_eq!(analysis.participant_count, 1);
     // With neutral messages and single participant, should lean solo or comping
-    assert!(matches!(analysis.mode, JazzMode::Solo | JazzMode::Comping | JazzMode::Ballad));
+    assert!(matches!(
+        analysis.mode,
+        JazzMode::Solo | JazzMode::Comping | JazzMode::Ballad
+    ));
 }
 
 #[test]
@@ -414,7 +497,10 @@ fn jazz_analysis_building_mode() {
     // Verify we got creative analysis
     assert!(analysis.friction_ratio < 0.5); // mostly flow
     // Creative messages should push toward Building or Groove
-    assert!(matches!(analysis.mode, JazzMode::Building | JazzMode::Groove | JazzMode::Ballad));
+    assert!(matches!(
+        analysis.mode,
+        JazzMode::Building | JazzMode::Groove | JazzMode::Ballad
+    ));
 }
 
 #[test]
@@ -439,7 +525,11 @@ fn jazz_analysis_chord_quality_mapping() {
     // Tense → Diminished
     let mut cap = Capture::new();
     for _ in 0..5 {
-        cap.capture(Message { text: "bad terrible awful".into(), sender: "a".into(), timestamp_ms: 0 });
+        cap.capture(Message {
+            text: "bad terrible awful".into(),
+            sender: "a".into(),
+            timestamp_ms: 0,
+        });
     }
     let analysis = JazzAnalysis::from_capture(&cap);
     assert_eq!(analysis.chord, ChordQuality::Diminished);
@@ -456,7 +546,10 @@ fn jazz_analysis_chord_quality_mapping() {
     }
     let analysis2 = JazzAnalysis::from_capture(&cap2);
     // Creative messages raise pitch → could be either Major7 or Augmented
-    assert!(matches!(analysis2.chord, ChordQuality::Major7 | ChordQuality::Augmented));
+    assert!(matches!(
+        analysis2.chord,
+        ChordQuality::Major7 | ChordQuality::Augmented
+    ));
     assert!(analysis2.tension < 0.3);
 }
 
@@ -472,9 +565,14 @@ fn jazz_analysis_from_empty_messages() {
 fn jazz_mode_descriptions_are_poetic() {
     // Every mode should have a non-trivial description
     for mode in [
-        JazzMode::Groove, JazzMode::Building, JazzMode::Tension,
-        JazzMode::Release, JazzMode::Solo, JazzMode::Comping,
-        JazzMode::Free, JazzMode::Ballad,
+        JazzMode::Groove,
+        JazzMode::Building,
+        JazzMode::Tension,
+        JazzMode::Release,
+        JazzMode::Solo,
+        JazzMode::Comping,
+        JazzMode::Free,
+        JazzMode::Ballad,
     ] {
         let desc = mode.description();
         assert!(desc.len() > 10);
@@ -490,7 +588,11 @@ fn jazz_analysis_complexity_increases_with_pitch_variety() {
 
     // Low variety: all same text → similar pitches
     for i in 0..10 {
-        cap_low.capture(Message { text: "hello".into(), sender: "a".into(), timestamp_ms: i * 100 });
+        cap_low.capture(Message {
+            text: "hello".into(),
+            sender: "a".into(),
+            timestamp_ms: i * 100,
+        });
     }
 
     // High variety: different texts → different pitches
@@ -507,7 +609,11 @@ fn jazz_analysis_complexity_increases_with_pitch_variety() {
         "slow dead lost",
     ];
     for (i, text) in texts.iter().enumerate() {
-        cap_high.capture(Message { text: text.to_string(), sender: format!("s{}", i), timestamp_ms: i as u64 * 100 });
+        cap_high.capture(Message {
+            text: text.to_string(),
+            sender: format!("s{}", i),
+            timestamp_ms: i as u64 * 100,
+        });
     }
 
     let low = JazzAnalysis::from_capture(&cap_low);
@@ -607,9 +713,15 @@ fn channel_assignment_many_dynamic_agents() {
 #[test]
 fn friction_all_flags_are_distinct_bits() {
     let flags = [
-        friction::NONE, friction::TIMEOUT, friction::CONFLICT,
-        friction::RATE_LIMIT, friction::AMBIGUITY, friction::IMPORT_ERROR,
-        friction::SYNTAX_ERROR, friction::TYPE_MISMATCH, friction::NETWORK_ERROR,
+        friction::NONE,
+        friction::TIMEOUT,
+        friction::CONFLICT,
+        friction::RATE_LIMIT,
+        friction::AMBIGUITY,
+        friction::IMPORT_ERROR,
+        friction::SYNTAX_ERROR,
+        friction::TYPE_MISMATCH,
+        friction::NETWORK_ERROR,
     ];
     // NONE is 0, all others should be unique nonzero
     let nonzero: Vec<u8> = flags.iter().filter(|&&f| f != 0).copied().collect();
@@ -635,7 +747,7 @@ fn capture_friction_heavy_conversation_analyzed_correctly() {
     let mut cap = Capture::new();
 
     // Simulate a conversation with errors
-    let error_messages = vec![
+    let error_messages = [
         "Syntax error in parser",
         "Import failed: missing module",
         "Type mismatch on line 42",
@@ -660,7 +772,11 @@ fn capture_friction_heavy_conversation_analyzed_correctly() {
 #[test]
 fn capture_tick_advances_with_each_message() {
     let mut cap = Capture::new();
-    let msg = Message { text: "test".into(), sender: "human".into(), timestamp_ms: 0 };
+    let msg = Message {
+        text: "test".into(),
+        sender: "human".into(),
+        timestamp_ms: 0,
+    };
 
     let (_, e1) = cap.capture(msg.clone());
     let (_, e2) = cap.capture(msg.clone());

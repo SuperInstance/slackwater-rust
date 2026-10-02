@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 
 // ── Re-exports ──────────────────────────────────────────────────────
 
-pub use swmidi::{EventType, SwmidiEvent, SwmidiStream, PACKED_SIZE};
+pub use swmidi::{EventType, PACKED_SIZE, SwmidiEvent, SwmidiStream};
 pub use tempo_core::{BeatClock, MusicalPosition, PPQ, TempoMap};
 
 // ── Constants ───────────────────────────────────────────────────────
@@ -57,12 +57,12 @@ pub mod friction {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum SentimentLabel {
-    Bright = 0,      // positive, joyful
-    Creative = 1,    // imaginative, building
-    Inquiring = 2,   // questioning, curious
-    Neutral = 3,     // no strong signal
-    Tense = 4,       // negative, frustrated
-    Resolved = 5,    // conciliatory, grateful
+    Bright = 0,    // positive, joyful
+    Creative = 1,  // imaginative, building
+    Inquiring = 2, // questioning, curious
+    Neutral = 3,   // no strong signal
+    Tense = 4,     // negative, frustrated
+    Resolved = 5,  // conciliatory, grateful
 }
 
 impl SentimentLabel {
@@ -104,26 +104,60 @@ pub struct Sentiment {
 /// by all callers, never copied. The analyzer iterates over borrowed
 /// slices of &'static str.
 pub const POSITIVE_WORDS: &[&str] = &[
-    "great", "awesome", "love", "perfect", "excellent", "wonderful",
-    "yes", "good", "amazing", "fantastic", "beautiful", "brilliant",
-    "nice", "cool", "happy", "glad", "thanks", "thank", "sweet",
-    "perfect", "win", "success", "proud",
+    "great",
+    "awesome",
+    "love",
+    "perfect",
+    "excellent",
+    "wonderful",
+    "yes",
+    "good",
+    "amazing",
+    "fantastic",
+    "beautiful",
+    "brilliant",
+    "nice",
+    "cool",
+    "happy",
+    "glad",
+    "thanks",
+    "thank",
+    "sweet",
+    "perfect",
+    "win",
+    "success",
+    "proud",
 ];
 
 pub const NEGATIVE_WORDS: &[&str] = &[
-    "bad", "error", "fail", "broken", "hate", "wrong", "no", "terrible",
-    "awful", "crash", "bug", "issue", "stuck", "frustrated", "annoying",
-    "slow", "dead", "lost", "miss", "angry", "sad",
+    "bad",
+    "error",
+    "fail",
+    "broken",
+    "hate",
+    "wrong",
+    "no",
+    "terrible",
+    "awful",
+    "crash",
+    "bug",
+    "issue",
+    "stuck",
+    "frustrated",
+    "annoying",
+    "slow",
+    "dead",
+    "lost",
+    "miss",
+    "angry",
+    "sad",
 ];
 
-pub const QUESTION_WORDS: &[&str] = &[
-    "what", "how", "why", "where", "when", "who", "which", "?",
-];
+pub const QUESTION_WORDS: &[&str] = &["what", "how", "why", "where", "when", "who", "which", "?"];
 
 pub const CREATIVE_WORDS: &[&str] = &[
-    "imagine", "create", "build", "design", "compose", "paint", "draw",
-    "write", "dream", "invent", "explore", "craft", "forge", "shape",
-    "mold", "weave", "spark",
+    "imagine", "create", "build", "design", "compose", "paint", "draw", "write", "dream", "invent",
+    "explore", "craft", "forge", "shape", "mold", "weave", "spark",
 ];
 
 /// Count how many words in `text` appear in `word_list`.
@@ -229,8 +263,8 @@ pub struct GridEvent {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct PulsePosition {
     pub bar: u32,
-    pub pulse: u8,      // 0–11
-    pub sub_tick: u8,   // 0–47
+    pub pulse: u8,    // 0–11
+    pub sub_tick: u8, // 0–47
 }
 
 /// Convert a tick to a pulse position in 12/8 time.
@@ -239,7 +273,11 @@ pub const fn tick_to_pulse(tick: u32) -> PulsePosition {
     let within_bar = tick % TICKS_PER_BAR;
     let pulse = (within_bar / TICKS_PER_PULSE) as u8;
     let sub_tick = (within_bar % TICKS_PER_PULSE) as u8;
-    PulsePosition { bar, pulse, sub_tick }
+    PulsePosition {
+        bar,
+        pulse,
+        sub_tick,
+    }
 }
 
 /// Convert a pulse position back to a tick.
@@ -397,11 +435,7 @@ impl EventRingBuffer {
         } else {
             self.head
         };
-        self.buffer
-            .iter()
-            .cycle()
-            .skip(start)
-            .take(self.len)
+        self.buffer.iter().cycle().skip(start).take(self.len)
     }
 
     /// Maximum capacity.
@@ -573,7 +607,9 @@ impl Capture {
             bpm: self.clock.bpm(),
             events: self.ring.iter().copied().collect(),
             messages: self.messages.clone(),
-            participants: self.participants.iter()
+            participants: self
+                .participants
+                .iter()
                 .map(|(k, &v)| (k.clone(), v))
                 .collect(),
         }
@@ -610,14 +646,14 @@ pub struct CaptureExport {
 /// Jazz mode — the overall feel of a conversation segment.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum JazzMode {
-    Groove,     // flowing, low tension, moderate energy
-    Building,   // increasing energy, creative
-    Tension,    // high friction, dissonant
-    Release,    // resolving, tension dropping
-    Solo,       // one dominant voice
-    Comping,    // short supportive exchanges
-    Free,       // chaotic, unpredictable
-    Ballad,     // slow, sparse, emotional
+    Groove,   // flowing, low tension, moderate energy
+    Building, // increasing energy, creative
+    Tension,  // high friction, dissonant
+    Release,  // resolving, tension dropping
+    Solo,     // one dominant voice
+    Comping,  // short supportive exchanges
+    Free,     // chaotic, unpredictable
+    Ballad,   // slow, sparse, emotional
 }
 
 impl JazzMode {
@@ -753,6 +789,7 @@ impl JazzAnalysis {
             ChordQuality::Sus4
         };
 
+        let chord_desc = format!("{:?}", chord);
         let description = format!(
             "The ensemble is {}. The harmony lives in {}. Tension: {:.0}%. Energy: {:.0}%.",
             match mode {
@@ -765,7 +802,7 @@ impl JazzAnalysis {
                 JazzMode::Free => "in free improvisation",
                 JazzMode::Ballad => "in ballad territory",
             },
-            format!("{:?}", chord),
+            chord_desc,
             tension * 100.0,
             energy * 100.0,
         );
@@ -973,7 +1010,14 @@ mod tests {
     fn test_bar_density() {
         let mut grid = PulseGrid::new();
         for i in 0..6 {
-            grid.add(SwmidiEvent::new(EventType::NoteOn, 0, 60, 100, 0, i * TICKS_PER_PULSE));
+            grid.add(SwmidiEvent::new(
+                EventType::NoteOn,
+                0,
+                60,
+                100,
+                0,
+                i * TICKS_PER_PULSE,
+            ));
         }
         // 6 of 12 pulses filled = 0.5 density
         assert!((grid.bar_density(0) - 0.5).abs() < 0.01);
@@ -1160,7 +1204,7 @@ mod tests {
     #[test]
     fn test_friction_flags() {
         assert_eq!(friction::NONE, 0);
-        assert!(friction::TIMEOUT != friction::CONFLICT);
+        assert_ne!(friction::TIMEOUT, friction::CONFLICT);
         let combined = friction::TIMEOUT | friction::NETWORK_ERROR;
         assert!(combined & friction::TIMEOUT != 0);
         assert!(combined & friction::NETWORK_ERROR != 0);
