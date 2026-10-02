@@ -134,9 +134,20 @@ fn p5_witnesses_pin_the_convention_on_both_formulas() {
     let diag = EisensteinPoint::new(1, 1); // the ±(1+ω) step — a TRUE neighbor
     let anti = EisensteinPoint::new(1, -1); // NOT a neighbor step
     assert!(o.neighbors().contains(&diag), "(1,1) must be a neighbor");
-    assert!(!o.neighbors().contains(&anti), "(1,-1) must not be a neighbor");
-    assert_eq!(o.lattice_distance(&diag), 1, "current formula: (1,1) at distance 1");
-    assert_eq!(o.lattice_distance(&anti), 2, "current formula: (1,-1) at distance 2");
+    assert!(
+        !o.neighbors().contains(&anti),
+        "(1,-1) must not be a neighbor"
+    );
+    assert_eq!(
+        o.lattice_distance(&diag),
+        1,
+        "current formula: (1,1) at distance 1"
+    );
+    assert_eq!(
+        o.lattice_distance(&anti),
+        2,
+        "current formula: (1,-1) at distance 2"
+    );
     // The published 0.1.0 formula scores exactly the wrong way on both:
     assert_eq!(
         pypi_0_1_0_hex_distance(o, diag),
