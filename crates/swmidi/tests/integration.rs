@@ -2,7 +2,7 @@
 //!
 //! Tests binary format edge cases, stream operations, and wire compatibility.
 
-use swmidi::{DecodeError, EventType, SwmidiEvent, SwmidiStream, PACKED_SIZE};
+use swmidi::{DecodeError, EventType, PACKED_SIZE, SwmidiEvent, SwmidiStream};
 
 // ════════════════════════════════════════════════════════════════════
 // BINARY FORMAT EDGE CASES
@@ -30,10 +30,10 @@ fn encode_all_event_types_round_trip() {
 fn encode_max_values() {
     let event = SwmidiEvent::new(
         EventType::Meta,
-        15,     // max channel
-        127,    // max pitch
-        127,    // max velocity
-        0xFF,   // max error_mask
+        15,   // max channel
+        127,  // max pitch
+        127,  // max velocity
+        0xFF, // max error_mask
         u32::MAX,
     );
     let encoded = event.encode();
@@ -60,7 +60,12 @@ fn encode_min_values() {
 fn channel_above_15_is_masked() {
     for ch in [16, 32, 128, 255] {
         let event = SwmidiEvent::new(EventType::NoteOn, ch, 0, 0, 0, 0);
-        assert!(event.channel <= 15, "channel {} should be masked, got {}", ch, event.channel);
+        assert!(
+            event.channel <= 15,
+            "channel {} should be masked, got {}",
+            ch,
+            event.channel
+        );
     }
 }
 
@@ -68,7 +73,12 @@ fn channel_above_15_is_masked() {
 fn pitch_above_127_is_masked() {
     for pitch in [128, 200, 255] {
         let event = SwmidiEvent::new(EventType::NoteOn, 0, pitch, 0, 0, 0);
-        assert!(event.pitch <= 127, "pitch {} should be masked, got {}", pitch, event.pitch);
+        assert!(
+            event.pitch <= 127,
+            "pitch {} should be masked, got {}",
+            pitch,
+            event.pitch
+        );
     }
 }
 
@@ -85,7 +95,11 @@ fn all_invalid_event_types_return_none() {
     for nibble in 5..16 {
         let mut buf = [0u8; PACKED_SIZE];
         buf[0] = nibble << 4;
-        assert!(SwmidiEvent::decode(&buf).is_none(), "nibble {} should be invalid", nibble);
+        assert!(
+            SwmidiEvent::decode(&buf).is_none(),
+            "nibble {} should be invalid",
+            nibble
+        );
     }
 }
 
@@ -131,8 +145,8 @@ fn event_type_nibble_round_trip() {
 #[test]
 fn event_type_from_nibble_masks_high_bits() {
     // High bits should be masked off
-    assert_eq!(EventType::from_nibble(0x10), Some(EventType::NoteOn));   // 0x10 & 0x0F = 0
-    assert_eq!(EventType::from_nibble(0x21), Some(EventType::NoteOff));  // 0x21 & 0x0F = 1
+    assert_eq!(EventType::from_nibble(0x10), Some(EventType::NoteOn)); // 0x10 & 0x0F = 0
+    assert_eq!(EventType::from_nibble(0x21), Some(EventType::NoteOff)); // 0x21 & 0x0F = 1
 }
 
 #[test]
@@ -196,7 +210,10 @@ fn stream_decode_13_bytes_truncated() {
 #[test]
 fn stream_decode_5_bytes_truncated() {
     let buf = [0u8; 5];
-    assert!(matches!(SwmidiStream::decode_all(&buf), Err(DecodeError::Truncated)));
+    assert!(matches!(
+        SwmidiStream::decode_all(&buf),
+        Err(DecodeError::Truncated)
+    ));
 }
 
 #[test]
@@ -312,6 +329,10 @@ fn error_mask_preserves_all_bits() {
         let event = SwmidiEvent::new(EventType::Meta, 0, 0, 0, mask, 0);
         let encoded = event.encode();
         let decoded = SwmidiEvent::decode(&encoded).unwrap();
-        assert_eq!(decoded.error_mask, mask, "error_mask {} not preserved", mask);
+        assert_eq!(
+            decoded.error_mask, mask,
+            "error_mask {} not preserved",
+            mask
+        );
     }
 }

@@ -3,10 +3,7 @@
 //! Tests focus on multi-tempo scenarios, round-trip conversions,
 //! edge cases at bar/beat boundaries, and clock behavior over time.
 
-use tempo_core::{
-    BeatClock, MusicalPosition, TempoEvent, TempoMap,
-    DEFAULT_US_PER_QUARTER, PPQ,
-};
+use tempo_core::{BeatClock, DEFAULT_US_PER_QUARTER, MusicalPosition, PPQ, TempoEvent, TempoMap};
 
 // ════════════════════════════════════════════════════════════════════
 // TEMPO EVENT CONVERSIONS
@@ -33,7 +30,12 @@ fn tempo_event_standard_tempos() {
         );
         // us_per_quarter should be close (integer truncation)
         let drift = (event.us_per_quarter as i64 - expected_us as i64).unsigned_abs();
-        assert!(drift <= 1, "us_per_quarter drift too large for {} BPM: {}", bpm, drift);
+        assert!(
+            drift <= 1,
+            "us_per_quarter drift too large for {} BPM: {}",
+            bpm,
+            drift
+        );
     }
 }
 
@@ -69,7 +71,10 @@ fn tempo_event_ordering_by_tick() {
     // But Eq requires all fields match. So a != TempoEvent with different us_per_quarter.
     // The Ord impl says cmp == Equal for same tick, but PartialEq checks all fields.
     // This means: a.cmp(&c) == Equal, but a != c.
-    assert_eq!(a.cmp(&TempoEvent::new(100, 999_999)), core::cmp::Ordering::Equal);
+    assert_eq!(
+        a.cmp(&TempoEvent::new(100, 999_999)),
+        core::cmp::Ordering::Equal
+    );
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -116,7 +121,7 @@ fn tempo_map_insert_at_nonzero_tick() {
 #[test]
 fn tempo_map_tempo_at_finds_correct_segment() {
     let mut map = TempoMap::new(); // 120 BPM at 0
-    map.insert(TempoEvent::from_bpm(192, 90.0));  // 90 BPM at tick 192
+    map.insert(TempoEvent::from_bpm(192, 90.0)); // 90 BPM at tick 192
     map.insert(TempoEvent::from_bpm(384, 180.0)); // 180 BPM at tick 384
 
     // Tick 0: 120 BPM
@@ -165,7 +170,14 @@ fn tempo_map_us_to_tick_inverse_at_120bpm() {
         // Should be close (integer division may lose precision up to one tick's worth)
         let drift = (us_back as i64 - us as i64).unsigned_abs();
         let max_drift = DEFAULT_US_PER_QUARTER / PPQ as u64; // µs per tick
-        assert!(drift <= max_drift, "Round-trip drift too large for {} µs: {} (tick {} → {} µs)", us, drift, tick, us_back);
+        assert!(
+            drift <= max_drift,
+            "Round-trip drift too large for {} µs: {} (tick {} → {} µs)",
+            us,
+            drift,
+            tick,
+            us_back
+        );
     }
 }
 
@@ -196,7 +208,11 @@ fn tempo_map_iter_returns_sorted_events() {
     map.insert(TempoEvent::from_bpm(100, 60.0));
 
     let ticks: Vec<u32> = map.iter().map(|e| e.tick).collect();
-    assert!(ticks.windows(2).all(|w| w[0] <= w[1]), "Events not sorted: {:?}", ticks);
+    assert!(
+        ticks.windows(2).all(|w| w[0] <= w[1]),
+        "Events not sorted: {:?}",
+        ticks
+    );
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -293,11 +309,11 @@ fn beat_clock_current_us_at_constant_tempo() {
 #[test]
 fn beat_clock_current_us_with_tempo_change() {
     let mut clock = BeatClock::new(); // 120 BPM at tick 0
-    clock.advance(96);               // Now at tick 96
+    clock.advance(96); // Now at tick 96
     assert_eq!(clock.current_us(), 500_000);
 
-    clock.set_bpm(60.0);             // 60 BPM at tick 96
-    clock.advance(96);               // Now at tick 192
+    clock.set_bpm(60.0); // 60 BPM at tick 96
+    clock.advance(96); // Now at tick 192
     // Segment 1: 96 ticks at 500_000 µs/q = 500_000 µs
     // Segment 2: 96 ticks at 1_000_000 µs/q = 1_000_000 µs
     // Total: 1_500_000 µs

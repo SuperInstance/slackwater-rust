@@ -4,9 +4,8 @@
 //! packing edge cases, and fleet-scale analysis.
 
 use perception_core::{
+    Convergence, ConvergenceReport, ConvergenceStrength, MultiTrack, Track, TrackEvent,
     pack_eisenstein, unpack_eisenstein,
-    Convergence, ConvergenceReport, ConvergenceStrength,
-    MultiTrack, Track, TrackEvent,
 };
 
 // ════════════════════════════════════════════════════════════════════
@@ -58,7 +57,15 @@ fn eisenstein_extreme_values() {
     for &(a, b) in &test_values {
         let packed = pack_eisenstein(a, b);
         let (ra, rb) = unpack_eisenstein(packed);
-        assert_eq!((ra, rb), (a, b), "Round-trip failed for ({}, {}): got ({}, {})", a, b, ra, rb);
+        assert_eq!(
+            (ra, rb),
+            (a, b),
+            "Round-trip failed for ({}, {}): got ({}, {})",
+            a,
+            b,
+            ra,
+            rb
+        );
     }
 }
 
@@ -188,7 +195,11 @@ fn multitrack_all_diverge() {
     let mut mt = MultiTrack::new();
     for (i, name) in ["alpha", "beta", "gamma"].iter().enumerate() {
         let mut t = Track::new(*name, i as u8);
-        t.add_event(TrackEvent::from_eisenstein(0, (i * 100) as i32, (i * 100) as i32));
+        t.add_event(TrackEvent::from_eisenstein(
+            0,
+            (i * 100) as i32,
+            (i * 100) as i32,
+        ));
         mt.add_track(t);
     }
 
@@ -271,7 +282,10 @@ fn multitrack_many_agents_partial_convergence() {
     let mut mt = MultiTrack::new();
 
     // 5 agents: 3 at (5,5), 2 at (10,10) at tick 0
-    for (i, &(a, b)) in [(5, 5), (5, 5), (5, 5), (10, 10), (10, 10)].iter().enumerate() {
+    for (i, &(a, b)) in [(5, 5), (5, 5), (5, 5), (10, 10), (10, 10)]
+        .iter()
+        .enumerate()
+    {
         let mut t = Track::new(format!("agent_{}", i), i as u8);
         t.add_event(TrackEvent::from_eisenstein(0, a, b));
         mt.add_track(t);
