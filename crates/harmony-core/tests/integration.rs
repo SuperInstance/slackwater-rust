@@ -91,7 +91,7 @@ fn normalized_entropy_always_in_unit_range() {
     for intervals in test_cases {
         let ne = normalized_entropy(&intervals);
         assert!(
-            ne >= 0.0 && ne <= 1.0,
+            (0.0..=1.0).contains(&ne),
             "normalized entropy out of range for test case: {}",
             ne
         );
@@ -143,7 +143,7 @@ fn phi_always_in_unit_range() {
     for (intervals, idle) in test_cases {
         let phi = compute_phi(&intervals, idle, &PhiWeights::default());
         assert!(
-            phi >= 0.0 && phi <= 1.0,
+            (0.0..=1.0).contains(&phi),
             "Φ out of range [{}, {}]: {}",
             idle,
             intervals.len(),
@@ -198,7 +198,7 @@ fn phi_windowed_tracks_transition() {
     let last_regular = timestamps.last().copied().unwrap_or(0.0);
     let mut t = last_regular;
     for _ in 0..50 {
-        t += if timestamps.len() % 3 == 0 { 5.0 } else { 0.3 };
+        t += if timestamps.len().is_multiple_of(3) { 5.0 } else { 0.3 };
         timestamps.push(t);
     }
 

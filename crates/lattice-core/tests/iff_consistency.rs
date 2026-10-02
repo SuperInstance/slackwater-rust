@@ -53,9 +53,9 @@ fn ball(radius: u32) -> Vec<EisensteinPoint> {
 fn pypi_0_1_0_hex_distance(a: EisensteinPoint, b: EisensteinPoint) -> u32 {
     let da = a.a - b.a;
     let db = a.b - b.b;
-    (da.abs() as u32)
-        .max(db.abs() as u32)
-        .max((da + db).abs() as u32)
+    da.unsigned_abs()
+        .max(db.unsigned_abs())
+        .max((da + db).unsigned_abs())
 }
 
 #[test]

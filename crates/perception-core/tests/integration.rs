@@ -298,7 +298,7 @@ fn multitrack_many_agents_partial_convergence() {
 }
 
 #[test]
-fn convergence_streNGTH_distinct() {
+fn convergence_strength_distinct() {
     assert_ne!(ConvergenceStrength::Exact, ConvergenceStrength::Weak);
 }
 

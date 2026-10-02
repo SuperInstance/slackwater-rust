@@ -789,6 +789,7 @@ impl JazzAnalysis {
             ChordQuality::Sus4
         };
 
+        let chord_desc = format!("{:?}", chord);
         let description = format!(
             "The ensemble is {}. The harmony lives in {}. Tension: {:.0}%. Energy: {:.0}%.",
             match mode {
@@ -801,7 +802,7 @@ impl JazzAnalysis {
                 JazzMode::Free => "in free improvisation",
                 JazzMode::Ballad => "in ballad territory",
             },
-            format!("{:?}", chord),
+            chord_desc,
             tension * 100.0,
             energy * 100.0,
         );
@@ -1203,7 +1204,7 @@ mod tests {
     #[test]
     fn test_friction_flags() {
         assert_eq!(friction::NONE, 0);
-        assert!(friction::TIMEOUT != friction::CONFLICT);
+        assert_ne!(friction::TIMEOUT, friction::CONFLICT);
         let combined = friction::TIMEOUT | friction::NETWORK_ERROR;
         assert!(combined & friction::TIMEOUT != 0);
         assert!(combined & friction::NETWORK_ERROR != 0);

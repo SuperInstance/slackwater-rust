@@ -191,7 +191,7 @@ fn tempo_map_us_to_tick_multi_tempo() {
 
     // 1_500_000 µs → tick 192 (end of second segment at 60 BPM)
     let tick = map.us_to_tick(1_500_000);
-    assert!(tick >= 190 && tick <= 194, "Expected ~192, got {}", tick);
+    assert!((190..=194).contains(&tick), "Expected ~192, got {}", tick);
 }
 
 #[test]

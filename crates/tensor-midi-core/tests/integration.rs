@@ -6,7 +6,7 @@
 
 use tensor_midi_core::{
     Capture, ChordQuality, EventRingBuffer, EventType, GridEvent, JazzAnalysis, JazzMode, Message,
-    PULSES_PER_BAR, PulseGrid, PulsePosition, SentimentLabel, SwmidiEvent, TICKS_PER_BAR,
+    PULSES_PER_BAR, PulseGrid, SentimentLabel, SwmidiEvent, TICKS_PER_BAR,
     TICKS_PER_PULSE, analyze_sentiment, channels, detect_tempo, friction, pulse_to_tick,
     tick_to_pulse,
 };
@@ -114,9 +114,8 @@ fn pipeline_encode_decode_round_trip() {
     assert_eq!(binary.len(), 3 * tensor_midi_core::PACKED_SIZE);
 
     // Decode each event
-    for chunk in binary.chunks_exact(tensor_midi_core::PACKED_SIZE) {
-        let arr: [u8; 8] = chunk.try_into().unwrap();
-        let event = SwmidiEvent::decode(&arr).unwrap();
+    for chunk in binary.as_chunks::<{ tensor_midi_core::PACKED_SIZE }>().0 {
+        let event = SwmidiEvent::decode(chunk).unwrap();
         assert!(event.pitch <= 127);
     }
 }
@@ -749,7 +748,7 @@ fn capture_friction_heavy_conversation_analyzed_correctly() {
     let mut cap = Capture::new();
 
     // Simulate a conversation with errors
-    let error_messages = vec![
+    let error_messages = [
         "Syntax error in parser",
         "Import failed: missing module",
         "Type mismatch on line 42",

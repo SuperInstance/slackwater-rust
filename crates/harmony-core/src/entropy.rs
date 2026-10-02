@@ -141,7 +141,7 @@ mod tests {
         let values = vec![0.5, 1.0, 1.5, 2.0, 0.3, 0.7, 1.2, 3.0, 0.1, 2.5];
         let ne = normalized_entropy(&values);
         assert!(
-            ne >= 0.0 && ne <= 1.0,
+            (0.0..=1.0).contains(&ne),
             "normalized entropy should be in [0,1], got {ne}"
         );
     }
